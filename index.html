@@ -2,33 +2,37 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>MS CamScanner AI Pro</title>
     
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
     <style>
         :root {
             --bg-main: #090a0f;
-            --bg-card: rgba(22, 25, 35, 0.75);
+            --bg-card: rgba(22, 25, 35, 0.85);
             --accent-glow: #00ffcc;
             --accent-blue: #007aff;
             --text-primary: #ffffff;
             --text-secondary: #a0aec0;
             --border-glass: rgba(255, 255, 255, 0.08);
-            --neon-shadow: 0 0 20px rgba(0, 255, 204, 0.25);
+            --neon-shadow: 0 0 25px rgba(0, 255, 204, 0.3);
         }
 
         * {
             box-sizing: border-box;
             margin: 0;
             padding: 0;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, sans-serif;
             -webkit-tap-highlight-color: transparent;
         }
 
         body {
             background-color: var(--bg-main);
             color: var(--text-primary);
-            overflow-x: hidden;
             min-height: 100vh;
         }
 
@@ -37,9 +41,8 @@
             justify-content: space-between;
             align-items: center;
             padding: 15px 20px;
-            background: rgba(9, 10, 15, 0.85);
+            background: rgba(9, 10, 15, 0.9);
             backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
             border-bottom: 1px solid var(--border-glass);
             position: fixed;
             top: 0;
@@ -54,31 +57,43 @@
             display: flex;
             flex-direction: column;
             gap: 6px;
-            padding: 5px;
-            z-index: 1100;
         }
 
         .menu-btn span {
             display: block;
-            width: 26px;
+            width: 24px;
             height: 3px;
             background: var(--accent-glow);
             border-radius: 2px;
-            transition: 0.3s;
-            box-shadow: 0 0 5px rgba(0, 255, 204, 0.5);
         }
 
         .app-title {
-            font-size: 1.2rem;
+            font-size: 1.15rem;
             font-weight: 700;
             background: linear-gradient(135deg, #ffffff 0%, var(--accent-glow) 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
         }
+
+        /* File Upload Input Button Style */
+        .upload-wrapper {
+            position: relative;
+            overflow: hidden;
+            display: inline-block;
+        }
+        .upload-wrapper input[type=file] {
+            position: absolute;
+            left: 0;
+            top: 0;
+            opacity: 0;
+            width: 100%;
+            height: 100%;
+            cursor: pointer;
+        }
     </style>
 </head>
 <body>
-      <style>
+        <style>
         .sidebar {
             position: fixed;
             top: 0;
@@ -127,15 +142,15 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 20px;
+            gap: 15px;
         }
 
         .camera-viewport {
             width: 100%;
             max-width: 500px;
-            height: 60vh;
+            height: 52vh;
             background: #000;
-            border-radius: 28px;
+            border-radius: 24px;
             position: relative;
             overflow: hidden;
             border: 2px solid var(--border-glass);
@@ -148,34 +163,50 @@
             object-fit: cover;
         }
 
-        .scanner-laser {
-            position: absolute;
-            top: 0;
-            left: 0;
+        /* ---------------------------------------------------- */
+        /* IMAGE ENHANCEMENT & AUTOMATIC AI EFFECT LAYERS        */
+        /* ---------------------------------------------------- */
+        .effect-original { filter: none; }
+        .effect-bw { filter: grayscale(100%) contrast(180%) brightness(110%); }
+        .effect-hd-magic { filter: contrast(135%) brightness(105%) saturate(115%) sharp; }
+
+        .filter-scroller {
+            display: flex;
+            gap: 10px;
             width: 100%;
-            height: 3px;
-            background: linear-gradient(90deg, transparent, var(--accent-glow), transparent);
-            animation: scanAnim 2.5s linear infinite;
-            box-shadow: 0 0 10px var(--accent-glow);
-            pointer-events: none;
-            display: none;
+            max-width: 500px;
+            overflow-x: auto;
+            padding: 5px 0;
+            scrollbar-width: none;
+        }
+        .filter-scroller::-webkit-scrollbar { display: none; }
+
+        .filter-pill {
+            padding: 8px 16px;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid var(--border-glass);
+            border-radius: 20px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            white-space: nowrap;
+            color: var(--text-primary);
+            transition: 0.2s;
         }
 
-        @keyframes scanAnim {
-            0% { top: 0%; }
-            50% { top: 100%; }
-            100% { top: 0%; }
+        .filter-pill.active {
+            background: var(--accent-blue);
+            border-color: var(--accent-glow);
+            box-shadow: var(--neon-shadow);
         }
 
         .controls-panel {
             width: 100%;
             max-width: 500px;
             background: var(--bg-card);
-            border-radius: 24px;
-            padding: 20px;
+            border-radius: 20px;
+            padding: 15px;
             border: 1px solid var(--border-glass);
             backdrop-filter: blur(15px);
-            -webkit-backdrop-filter: blur(15px);
             display: flex;
             justify-content: space-around;
             align-items: center;
@@ -184,8 +215,8 @@
         .action-btn {
             background: rgba(255, 255, 255, 0.05);
             border: 1px solid var(--border-glass);
-            width: 55px;
-            height: 55px;
+            width: 50px;
+            height: 50px;
             border-radius: 50%;
             display: flex;
             justify-content: center;
@@ -199,25 +230,19 @@
         .action-btn:hover {
             background: var(--accent-glow);
             color: var(--bg-main);
-            box-shadow: var(--neon-shadow);
         }
 
         .shutter-btn {
-            width: 70px;
-            height: 70px;
+            width: 65px;
+            height: 65px;
             background: #ffffff;
             border: 5px solid rgba(0, 255, 204, 0.3);
             border-radius: 50%;
             cursor: pointer;
-            transition: 0.3s;
+            box-shadow: var(--neon-shadow);
         }
-
-        .shutter-btn:active {
-            transform: scale(0.9);
-            background: var(--accent-glow);
-        }
-            </style>
-        <style>
+        </style>
+            <style>
         .overlay-window {
             position: fixed;
             top: 0;
@@ -252,6 +277,7 @@
             margin-top: 20px;
         }
 
+        /* Fully Editable Modern Grid Layout */
         .editable-table {
             width: 100%;
             border-collapse: collapse;
@@ -268,15 +294,28 @@
         .editable-table th {
             background: rgba(0, 122, 255, 0.15);
             color: var(--accent-glow);
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
 
+        /* Ensuring all internal text/number fields are accessible and fully editable */
         .editable-table td input {
             width: 100%;
-            background: transparent;
-            border: none;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border-glass);
             color: var(--text-primary);
             font-size: 0.95rem;
+            padding: 8px 12px;
+            border-radius: 8px;
             outline: none;
+            transition: 0.2s;
+        }
+
+        .editable-table td input:focus {
+            border-color: var(--accent-glow);
+            background: rgba(0, 255, 204, 0.05);
+            box-shadow: 0 0 10px rgba(0, 255, 204, 0.15);
         }
 
         .ocr-textarea {
@@ -291,6 +330,7 @@
             resize: none;
             outline: none;
             margin-top: 15px;
+            line-height: 1.5;
         }
 
         .btn-ui {
@@ -302,12 +342,22 @@
             cursor: pointer;
             font-weight: 600;
             transition: 0.2s;
+            font-size: 0.9rem;
+        }
+
+        .btn-ui:active {
+            transform: scale(0.98);
         }
 
         .btn-ui.success {
-            background: rgba(0, 255, 204, 0.2);
+            background: rgba(0, 255, 204, 0.15);
             border: 1px solid var(--accent-glow);
             color: var(--accent-glow);
+        }
+
+        .btn-ui.success:hover {
+            background: var(--accent-glow);
+            color: #000;
         }
     </style>
 </head>
@@ -325,20 +375,38 @@
     <div class="sidebar" id="sidebarMenu">
         <button class="sidebar-item" onclick="openInvoiceGrid()">📊 Live Invoice / Summary Editor</button>
         <button class="sidebar-item" onclick="triggerHandwritingScan()">📝 Handwriting To Digital Text</button>
+        
+        <div class="sidebar-item upload-wrapper" style="text-align: left;">
+            📂 Upload Image / PDF Document
+            <input type="file" id="fileUploadInput" accept="image/*,application/pdf" onchange="handleIncomingDocument(this)">
+        </div>
+
         <button class="sidebar-item" id="menuInstallBtn" style="background: var(--accent-glow); color: #000; font-weight: bold; display: none;">📥 Install Application</button>
         <button class="sidebar-item" onclick="location.reload()" style="margin-top: 30px; border-color: rgba(255,0,0,0.2);">🔄 Hard Reset System</button>
     </div>
 
     <div class="main-container">
-        <div class="camera-viewport">
+        <div class="filter-scroller">
+            <button class="filter-pill active" onclick="applySystemFilter('original', this)">Original</button>
+            <button class="filter-pill" onclick="applySystemFilter('hd', this)">Magic HD Color</button>
+            <button class="filter-pill" onclick="applySystemFilter('bw', this)">B&W Document</button>
+        </div>
+
+        <div class="camera-viewport" id="viewportContainer">
             <video id="webcamStream" class="camera-stream" autoplay playsinline></video>
-            <img id="capturePreview" class="camera-stream" style="display: none; position: absolute; top: 0; left: 0;" alt="Preview">
-            <div class="scanner-laser" id="laserLine"></div>
+            
+            <img id="capturePreview" class="camera-stream" style="display: none; position: absolute; top: 0; left: 0;" alt="Preview Target">
         </div>
 
         <div class="controls-panel">
             <button class="action-btn" id="flashToggleBtn" onclick="toggleHardwareFlash()">⚡</button>
             <button class="shutter-btn" onclick="executeShutterCapture()"></button>
+            
+            <button class="action-btn upload-wrapper">
+                📁
+                <input type="file" accept="image/*,application/pdf" onchange="handleIncomingDocument(this)">
+            </button>
+            
             <button class="action-btn" onclick="dispatchFormatSelector()">📤</button>
         </div>
     </div>
@@ -361,7 +429,7 @@
                     </thead>
                     <tbody id="invoiceTableBody">
                         <tr>
-                            <td><input type="text" value="Clarins Ultra FLY (76ml)"></td>
+                            <td><input type="text" value="Clarins Ultra FLY (76ml)" oninput="recalculateGridGrandTotal()"></td>
                             <td><input type="number" value="10" oninput="calculateGridRowTotal(this)"></td>
                             <td><input type="number" value="892.5" oninput="calculateGridRowTotal(this)"></td>
                             <td><input type="number" value="8925.00" readonly style="color: var(--accent-glow); font-weight: bold;"></td>
@@ -369,8 +437,8 @@
                     </tbody>
                     <tfoot>
                         <tr style="background: rgba(0, 255, 204, 0.05);">
-                            <td colspan="3" style="text-align: right; font-weight: bold;">Grand Total (PKR):</td>
-                            <td id="gridGrandTotal" style="color: var(--accent-glow); font-weight: bold;">8925.00</td>
+                            <td colspan="3" style="text-align: right; font-weight: bold; color: var(--text-secondary);">Grand Total (PKR):</td>
+                            <td><input type="number" id="gridGrandTotal" value="8925.00" readonly style="color: var(--accent-glow); font-weight: bold; background: transparent; border: none; padding: 0;"></td>
                         </tr>
                     </tfoot>
                 </table>
@@ -404,50 +472,290 @@
         const invoiceGridOverlay = document.getElementById('invoiceGridOverlay');
         const ocrResultOverlay = document.getElementById('ocrResultOverlay');
         const flashToggleBtn = document.getElementById('flashToggleBtn');
-        const laserLine = document.getElementById('laserLine');
+        const viewportContainer = document.getElementById('viewportContainer');
 
         let localVideoStream = null;
         let isFlashActive = false;
         let activeVideoTrack = null;
         let lastCapturedBlob = null;
         let deferredPrompt = null;
+        let cropperInstance = null; // Holds the live manual cropping box instance
 
-        // Automatically boot engines on page completion
+        // Boot system engines on DOM load
         window.addEventListener('DOMContentLoaded', () => {
             bootCameraEngine();
             configureAppInstallation();
         });
 
-        // Safe, responsive hardware camera initialization loop
+        // Safe Hardware Camera Init Layer
         async function bootCameraEngine() {
             const options = {
-                video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } },
+                video: { facingMode: 'environment', width: { ideal: 1920 }, height: { ideal: 1080 } },
                 audio: false
             };
             try {
                 localVideoStream = await navigator.mediaDevices.getUserMedia(options);
                 webcamStream.srcObject = localVideoStream;
                 activeVideoTrack = localVideoStream.getVideoTracks()[0];
-                if (laserLine) laserLine.style.display = 'block';
             } catch (err) {
                 try {
-                    // Universal cross-device fallback stream
                     localVideoStream = await navigator.mediaDevices.getUserMedia({ video: true });
                     webcamStream.srcObject = localVideoStream;
                     activeVideoTrack = localVideoStream.getVideoTracks()[0];
-                    if (laserLine) laserLine.style.display = 'block';
                 } catch(fallbackErr) {
-                    console.error("Camera channel completely obstructed by system layout permissions.");
+                    console.error("Camera permissions blocked.");
                 }
             }
         }
 
-        // Three-line navigation drawer activation trigger
+        // Sliding standard left drawer navigation activation menu logic
         function toggleSidebar() {
             if (sidebarMenu) sidebarMenu.classList.toggle('active');
         }
 
-        // Native app setup for the sidebar button trigger
+        // ----------------------------------------------------
+        // ADVANCED FILE UPLOADER ENGINE (IMAGE / PDF HANDLER)
+        // ----------------------------------------------------
+        function handleIncomingDocument(inputElement) {
+            const file = inputElement.files[0];
+            if (!file) return;
+
+            if (sidebarMenu) sidebarMenu.classList.remove('active');
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                // Shut off webcam feed to activate document workspace preview
+                if (localVideoStream) {
+                    localVideoStream.getTracks().forEach(track => track.stop());
+                }
+                webcamStream.style.display = 'none';
+                
+                capturePreview.src = e.target.result;
+                capturePreview.style.display = 'block';
+                
+                // Trigger immediate manual interactive cropping system setup
+                initializeManualCropper();
+            };
+            reader.readAsDataURL(file);
+        }
+
+        // Manual Selection Box Builder Logic
+        function initializeManualCropper() {
+            if (cropperInstance) {
+                cropperInstance.destroy();
+            }
+            
+            // Initializing Cropper.js with free manual bounds movement configuration
+            cropperInstance = new Cropper(capturePreview, {
+                viewMode: 1,
+                dragMode: 'move',
+                autoCropArea: 0.9,
+                restore: false,
+                modal: true,
+                guides: true,
+                highlight: true,
+                cropBoxMovable: true, // Allows user to freely drag the crop box area
+                cropBoxResizable: true, // Allows resizing the boundaries manually
+                toggleDragModeOnDblclick: false
+            });
+        }
+// END OF PART 6
+                // Shutter Button Capture Action with Instant Crop Framework Trigger
+        function executeShutterCapture() {
+            if (!localVideoStream) return;
+            const canvas = document.createElement('canvas');
+            canvas.width = webcamStream.videoWidth || 1280;
+            canvas.height = webcamStream.videoHeight || 720;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(webcamStream, 0, 0, canvas.width, canvas.height);
+            
+            // Render to workspace viewport layout container
+            capturePreview.src = canvas.toDataURL('image/jpeg', 0.95);
+            webcamStream.style.display = 'none';
+            capturePreview.style.display = 'block';
+            
+            // Instantly summon crop boundaries box
+            initializeManualCropper();
+        }
+
+        // ----------------------------------------------------
+        // SYSTEM IMAGE ENHANCEMENT MATRIX FILTERS
+        // ----------------------------------------------------
+        function applySystemFilter(filterType, pillElement) {
+            if (!cropperInstance) return;
+            
+            // Remove active status from all pills
+            document.querySelectorAll('.filter-pill').forEach(p => p.classList.remove('active'));
+            pillElement.classList.add('active');
+
+            const croppedCanvasContainer = cropperInstance.getCroppedCanvas();
+            if (!croppedCanvasContainer) return;
+
+            // Target cropper element view style layer injection
+            const cropViewImage = document.querySelector('.cropper-view-box img');
+            const cropPreviewImage = document.querySelector('.cropper-face img');
+            
+            const filterClasses = ['effect-original', 'effect-bw', 'effect-hd-magic'];
+            
+            [cropViewImage, cropPreviewImage].forEach(imgElement => {
+                if (imgElement) {
+                    filterClasses.forEach(cls => imgElement.classList.remove(cls));
+                    if (filterType === 'bw') imgElement.classList.add('effect-bw');
+                    else if (filterType === 'hd') imgElement.classList.add('effect-hd-magic');
+                    else imgElement.classList.add('effect-original');
+                }
+            });
+        }
+
+        // Hardware flash control trigger routine
+        async function toggleHardwareFlash() {
+            if (!activeVideoTrack) return;
+            try {
+                const caps = activeVideoTrack.getCapabilities();
+                if (caps.torch) {
+                    isFlashActive = !isFlashActive;
+                    await activeVideoTrack.applyConstraints({ advanced: [{ torch: isFlashActive }] });
+                    flashToggleBtn.style.background = isFlashActive ? "var(--accent-glow)" : "rgba(255, 255, 255, 0.05)";
+                    flashToggleBtn.style.color = isFlashActive ? "#000" : "#fff";
+                }
+            } catch (e) {
+                console.error("Flash access restricted.");
+            }
+        }
+
+        // Live Dynamic Grid Overlay Management UI Controls
+        function openInvoiceGrid() {
+            if (sidebarMenu) sidebarMenu.classList.remove('active');
+            if (invoiceGridOverlay) invoiceGridOverlay.classList.add('active');
+            recalculateGridGrandTotal();
+        }
+
+        function closeInvoiceGrid() {
+            if (invoiceGridOverlay) invoiceGridOverlay.classList.remove('active');
+        }
+
+        // Calculate single table line value instantly on change
+        function calculateGridRowTotal(field) {
+            const row = field.closest('tr');
+            const inputs = row.querySelectorAll('input');
+            const qty = parseFloat(inputs[1].value) || 0;
+            const rate = parseFloat(inputs[2].value) || 0;
+            
+            // Update row total box value dynamically
+            inputs[3].value = (qty * rate).toFixed(2);
+            recalculateGridGrandTotal();
+        }
+
+        // Accumulate and refresh total bottom grand field value
+        function recalculateGridGrandTotal() {
+            const body = document.getElementById('invoiceTableBody');
+            if (!body) return;
+            let total = 0;
+            body.querySelectorAll('tr').forEach(r => {
+                const fields = r.querySelectorAll('input');
+                if (fields.length >= 4) total += parseFloat(fields[3].value) || 0;
+            });
+            document.getElementById('gridGrandTotal').value = total.toFixed(2);
+        }
+
+        function addNewGridRow() {
+            const body = document.getElementById('invoiceTableBody');
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td><input type="text" placeholder="New Item Name..." oninput="recalculateGridGrandTotal()"></td>
+                <td><input type="number" value="1" oninput="calculateGridRowTotal(this)"></td>
+                <td><input type="number" value="0" oninput="calculateGridRowTotal(this)"></td>
+                <td><input type="number" value="0.00" readonly style="color: var(--accent-glow); font-weight: bold;"></td>
+            `;
+            body.appendChild(tr);
+        }
+
+        // Mimicking AI Text OCR Window triggers
+        function triggerHandwritingScan() {
+            if (sidebarMenu) sidebarMenu.classList.remove('active');
+            const area = document.getElementById('ocrTargetTextarea');
+            if (area) {
+                area.value = "SHADAB PHARMACY (SAHIWAL)\nDate: 13-07-2026\n" +
+                             "-------------------------------------\n" +
+                             "Item 1: Clarins Ultra FLY (76ml)\nQty: 10 | Rate: 892.5\nTotal: 8925.00 PKR\n" +
+                             "-------------------------------------\n" +
+                             "NOTE: Short Expiry or Expired Stock ki Responsible Shadab Pharmacy Nahi hogi.";
+            }
+            if (ocrResultOverlay) ocrResultOverlay.classList.add('active');
+        }
+
+        function closeOcrModal() {
+            if (ocrResultOverlay) ocrResultOverlay.classList.remove('active');
+        }
+
+        function copyOcrTextToClipboard() {
+            const area = document.getElementById('ocrTargetTextarea');
+            if (area) {
+                navigator.clipboard.writeText(area.value);
+                alert("Text successfully copied!");
+            }
+        }
+
+        // ----------------------------------------------------
+        // ADVANCED JSDPDF DIGITAL WHATSAPP SHARING PIPELINE
+        // ----------------------------------------------------
+        async function dispatchFormatSelector() {
+            let finalImageURI = "";
+
+            if (cropperInstance) {
+                // Fetch high resolution manually cropped workspace boundary canvas data
+                finalImageURI = cropperInstance.getCroppedCanvas({ width: 1200 }).toDataURL('image/jpeg', 0.90);
+            } else {
+                finalImageURI = capturePreview.src;
+            }
+
+            if (!finalImageURI || finalImageURI.includes('undefined')) {
+                alert("Please take a scan or upload a document first.");
+                return;
+            }
+
+            try {
+                const { jsPDF } = window.jspdf;
+                const pdf = new jsPDF('p', 'mm', 'a4');
+                
+                // Scale full dimension image perfectly into PDF frame structure
+                pdf.addImage(finalImageURI, 'JPEG', 10, 10, 190, 277);
+                const pdfBinaryBlob = pdf.output('blob');
+
+                // Bind official application document type array
+                const documentFile = new File([pdfBinaryBlob], "MS-Scan-Report.pdf", { type: "application/pdf" });
+
+                if (navigator.canShare && navigator.canShare({ files: [documentFile] })) {
+                    await navigator.share({
+                        files: [documentFile],
+                        title: 'MS CamScanner Document',
+                        text: 'Sharing compiled scanner file'
+                    });
+                } else {
+                    // Universal safe fallback download link generation
+                    const downloadAnchor = document.createElement('a');
+                    downloadAnchor.href = URL.createObjectURL(pdfBinaryBlob);
+                    downloadAnchor.download = "MS-Scan-Report.pdf";
+                    downloadAnchor.click();
+                }
+            } catch (err) {
+                console.error("OS Web Share System blocked execution flow.", err);
+            }
+        }
+
+        function exportGridToExcel() {
+            const csv = [];
+            document.querySelectorAll("#invoiceDataTable tr").forEach(r => {
+                const row = [];
+                r.querySelectorAll("td input, th").forEach(c => row.push(c.value || c.innerText));
+                csv.push(row.join(","));
+            });
+            const link = document.createElement("a");
+            link.href = "data:text/csv;charset=utf-8," + encodeURI(csv.join("\n"));
+            link.download = "Invoice_Grid_Report.csv";
+            link.click();
+        }
+
         function configureAppInstallation() {
             const btn = document.getElementById('menuInstallBtn');
             window.addEventListener('beforeinstallprompt', (e) => {
@@ -465,137 +773,6 @@
                     }
                 });
             }
-        }
-// END OF PART 6
-                // Native torch activation routine
-        async function toggleHardwareFlash() {
-            if (!activeVideoTrack) return;
-            try {
-                const caps = activeVideoTrack.getCapabilities();
-                if (caps.torch) {
-                    isFlashActive = !isFlashActive;
-                    await activeVideoTrack.applyConstraints({ advanced: [{ torch: isFlashActive }] });
-                    flashToggleBtn.style.background = isFlashActive ? "var(--accent-glow)" : "rgba(255, 255, 255, 0.05)";
-                    flashToggleBtn.style.color = isFlashActive ? "#000" : "#fff";
-                }
-            } catch (e) {
-                console.error("Hardware flash access denied.");
-            }
-        }
-
-        // Process frame layout into canvas matrix snapshot
-        function executeShutterCapture() {
-            if (!localVideoStream) return;
-            const canvas = document.createElement('canvas');
-            canvas.width = webcamStream.videoWidth || 1280;
-            canvas.height = webcamStream.videoHeight || 720;
-            const ctx = canvas.getContext('2d');
-            ctx.drawImage(webcamStream, 0, 0, canvas.width, canvas.height);
-            
-            canvas.toBlob((b) => { lastCapturedBlob = b; }, 'image/jpeg', 0.95);
-            capturePreview.src = canvas.toDataURL('image/jpeg', 0.95);
-            capturePreview.style.display = 'block';
-            webcamStream.style.display = 'none';
-            if (laserLine) laserLine.style.display = 'none';
-        }
-
-        // Live Grid Overlay Management Panels
-        function openInvoiceGrid() {
-            if (sidebarMenu) sidebarMenu.classList.remove('active');
-            if (invoiceGridOverlay) invoiceGridOverlay.classList.add('active');
-            recalculateGridGrandTotal();
-        }
-
-        function closeInvoiceGrid() {
-            if (invoiceGridOverlay) invoiceGridOverlay.classList.remove('active');
-            if (webcamStream && webcamStream.style.display !== 'none' && laserLine) laserLine.style.display = 'block';
-        }
-
-        function calculateGridRowTotal(field) {
-            const row = field.closest('tr');
-            const inputs = row.querySelectorAll('input');
-            const qty = parseFloat(inputs[1].value) || 0;
-            const rate = parseFloat(inputs[2].value) || 0;
-            inputs[3].value = (qty * rate).toFixed(2);
-            recalculateGridGrandTotal();
-        }
-
-        function recalculateGridGrandTotal() {
-            const body = document.getElementById('invoiceTableBody');
-            if (!body) return;
-            let total = 0;
-            body.querySelectorAll('tr').forEach(r => {
-                const fields = r.querySelectorAll('input');
-                if (fields.length >= 4) total += parseFloat(fields[3].value) || 0;
-            });
-            document.getElementById('gridGrandTotal').innerText = total.toFixed(2);
-        }
-
-        function addNewGridRow() {
-            const body = document.getElementById('invoiceTableBody');
-            const tr = document.createElement('tr');
-            tr.innerHTML = `
-                <td><input type="text" placeholder="New Item Description..."></td>
-                <td><input type="number" value="1" oninput="calculateGridRowTotal(this)"></td>
-                <td><input type="number" value="0" oninput="calculateGridRowTotal(this)"></td>
-                <td><input type="number" value="0.00" readonly style="color: var(--accent-glow); font-weight: bold;"></td>
-            `;
-            body.appendChild(tr);
-        }
-
-        // Pure AI Data extraction mimicking pipeline
-        function triggerHandwritingScan() {
-            if (sidebarMenu) sidebarMenu.classList.remove('active');
-            const area = document.getElementById('ocrTargetTextarea');
-            if (area) {
-                area.value = "SHADAB PHARMACY (SAHIWAL)\nDate: 13-07-2026\n" +
-                             "-------------------------------------\n" +
-                             "Item 1: Clarins Ultra FLY (76ml)\nQty: 10 | Rate: 892.5\nTotal: 8925.00 PKR\n" +
-                             "-------------------------------------\n" +
-                             "NOTE: Shadab Pharmacy will not be held responsible for short expiry or expired stock.";
-            }
-            if (ocrResultOverlay) ocrResultOverlay.classList.add('active');
-        }
-
-        function closeOcrModal() {
-            if (ocrResultOverlay) ocrResultOverlay.classList.remove('active');
-        }
-
-        function copyOcrTextToClipboard() {
-            const area = document.getElementById('ocrTargetTextarea');
-            if (area) navigator.clipboard.writeText(area.value);
-        }
-
-        // Direct device native sharing API configuration
-        async function dispatchFormatSelector() {
-            if (!lastCapturedBlob) executeShutterCapture();
-            try {
-                const file = new File([lastCapturedBlob], "MS-Scan.pdf", { type: "application/pdf" });
-                if (navigator.canShare && navigator.canShare({ files: [file] })) {
-                    await navigator.share({ files: [file], title: 'MS Scan Document' });
-                } else {
-                    const a = document.createElement('a');
-                    a.href = URL.createObjectURL(lastCapturedBlob);
-                    a.download = "MS-Scan.pdf";
-                    a.click();
-                }
-            } catch (err) {
-                console.log("Share skipped.");
-            }
-        }
-
-        // Structured spreadsheet extraction module
-        function exportGridToExcel() {
-            const csv = [];
-            document.querySelectorAll("#invoiceDataTable tr").forEach(r => {
-                const row = [];
-                r.querySelectorAll("td input, th").forEach(c => row.push(c.value || c.innerText));
-                csv.push(row.join(","));
-            });
-            const link = document.createElement("a");
-            link.href = "data:text/csv;charset=utf-8," + encodeURI(csv.join("\n"));
-            link.download = "Invoice_Report.csv";
-            link.click();
         }
     </script>
 </body>
