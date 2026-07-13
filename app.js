@@ -147,7 +147,7 @@ function openWorkspaceEditor(imageSrc, isNewDocument = true) {
     const fieldsLayer = document.getElementById('dynamic-fields-injection-layer');
     
     if (isNewDocument) {
-        fieldsLayer.innerHTML = ""; // پرانے ان پٹ باکس صاف کرنا
+        fieldsLayer.innerHTML = ""; 
         localStorage.setItem('cs_active_image', imageSrc);
         localStorage.removeItem('cs_active_fields');
     }
@@ -164,19 +164,16 @@ function exitWorkspaceEditor() {
 }
 // === END: WORKSPACE MODAL WINDOW MANAGER ===
 
-// === START: SMART CANVAS TOUCH WRITING ENGINE ===
+// === START: SMART CANVAS TOUCH WRITING & AUTO CALCULATE ENGINE ===
 function handleDocumentCanvasTap(event) {
-    // اگر صارف پہلے سے بنے ہوئے کسی ان پٹ باکس کے اندر کلک کر رہا ہے تو نیا باکس نہ بنے
     if (event.target.classList.contains('workspace-absolute-input')) return;
     
     const imgMatrix = document.getElementById('workspace-source-img');
     const rect = imgMatrix.getBoundingClientRect();
     
-    // کلک کرنے کی جگہ کا حساب لگانا
     const clickX = event.clientX - rect.left;
     const clickY = event.clientY - rect.top;
     
-    // فیصد (Percentage) نکالنا تاکہ تصویر زوم ہو تب بھی ٹیکسٹ اپنی جگہ نہ بدلے
     const percentX = clickX / rect.width;
     const percentY = clickY / rect.height;
     
@@ -201,20 +198,34 @@ function injectDynamicInputField(data) {
     const inputElement = document.createElement('input');
     inputElement.type = "text";
     inputElement.id = data.id;
+    
+    // پرانا موٹا گرے بارڈر ہٹا کر بالکل سادہ ٹیکسٹ اسٹائل سیٹ کرنا
     inputElement.className = "workspace-absolute-input";
+    inputElement.style.border = "none";
+    inputElement.style.background = "transparent";
+    inputElement.style.color = "#000000";
+    inputElement.style.fontFamily = "monospace, Arial";
+    inputElement.style.fontSize = "12px";
+    inputElement.style.fontWeight = "normal";
+    inputElement.style.outline = "none";
+    inputElement.style.padding = "0px";
+    inputElement.style.textAlign = "right";
+    
+    // کالم کی سیدھ پکی کرنے کے لیے چوڑائی سیٹ کرنا
+    inputElement.style.left = `${(data.pctX * rect.width) - 40}px`;
+    inputElement.style.top = `${(data.pctY * rect.height) - 8}px`;
+    inputElement.style.width = "75px";
+    
     inputElement.value = data.value;
-    
-    // پوزیشن سیٹ کرنا
-    inputElement.style.left = `${(data.pctX * rect.width) - 20}px`;
-    inputElement.style.top = `${(data.pctY * rect.height) - 10}px`;
-    inputElement.style.width = "90px";
-    
     inputElement.dataset.percentX = data.pctX;
     inputElement.dataset.percentY = data.pctY;
     
-    // ڈیٹا محفوظ کرنے کے ایونٹس
-    inputElement.oninput = function() { saveAllFieldsToLocalMemory(); };
-    inputElement.onclick = function(e) { e.stopPropagation(); }; // کینوس کلک ایونٹ روکنا
+    // ہر ان پٹ پر رقم ٹائپ کرتے ہی فائنل کیلکولیشن رن کرنا
+    inputElement.oninput = function() { 
+        saveAllFieldsToLocalMemory();
+        calculateReceivedColumnTotal();
+    };
+    inputElement.onclick = function(e) { e.stopPropagation(); };
     
     layer.appendChild(inputElement);
     setTimeout(() => inputElement.focus(), 50);
@@ -233,7 +244,49 @@ function saveAllFieldsToLocalMemory() {
     });
     localStorage.setItem('cs_active_fields', JSON.stringify(dataArray));
 }
-// === END: SMART CANVAS TOUCH WRITING ENGINE ===
+
+// کالم کے تمام باکسز کی رقم کو جوڑ کر نیچے ٹوٹل دکھانے والا فنکشن
+function calculateReceivedColumnTotal() {
+    const inputs = document.querySelectorAll('.workspace-absolute-input');
+    let dynamicGrandTotal = 0;
+    
+    inputs.forEach(input => {
+        // اگر فیلڈ میں لکھی ہوئی ویلیو نمبر ہے تو اسے پلس کرنا، ورنہ چھوڑ دینا
+        const amountValue = parseFloat(input.value.replace(/,/g, ''));
+        if (!isNaN(amountValue)) {
+            dynamicGrandTotal += amountValue;
+        }
+    });
+    
+    // نیچے اینڈ پر فائنل اماؤنٹ پرنٹ کرنے کے لیے اگر کوئی پرانا ٹوٹل باکس بنا ہے تو اسے اپڈیٹ کرنا، ورنہ نیا بنانا
+    let totalDisplayBox = document.getElementById('received-live-grand-total');
+    if (!totalDisplayBox && inputs.length > 0) {
+        totalDisplayBox = document.createElement('div');
+        totalDisplayBox.id = 'received-live-grand-total';
+        totalDisplayBox.style.position = "absolute";
+        totalDisplayBox.style.color = "#000000";
+        totalDisplayBox.style.fontWeight = "bold";
+        totalDisplayBox.style.fontFamily = "monospace, Arial";
+        totalDisplayBox.style.fontSize = "13px";
+        
+        // یہ پوزیشن نیچے ٹوٹل والی لائن (لائن 361,607.00 کے بالکل برابر) پر ایڈجسٹ ہوگی
+        const imgMatrix = document.getElementById('workspace-source-img');
+        const rect = imgMatrix.getBoundingClientRect();
+        
+        // آخری ان پٹ باکس کی لائن کے حساب سے نیچے پوزیشن سیٹ کرنا
+        totalDisplayBox.style.right = "45px"; 
+        totalDisplayBox.style.bottom = "118px"; 
+        
+        document.getElementById('dynamic-fields-injection-layer').appendChild(totalDisplayBox);
+    }
+    
+    if (totalDisplayBox) {
+        // رقم کو روایتی کما (Comma Format) کے ساتھ ڈسپلے کرنا جیسے 378,760.00
+        totalDisplayBox.innerText = dynamicGrandTotal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+}
+// === END: SMART CANVAS TOUCH WRITING & AUTO CALCULATE ENGINE ===
+
 // === START: INTERACTIVE WORKSPACE IMAGES FILTERS ===
 function applyWorkspaceFilter(filterMode) {
     currentActiveFilter = filterMode;
