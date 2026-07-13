@@ -629,29 +629,43 @@ function handleCanvasTap(event) {
     const xCoord = event.clientX - rect.left;
     const yCoord = event.clientY - rect.top;
     
-    const estimatedFontSize = Math.max(11, Math.min(14, Math.round(rect.width * 0.02)));
+    // کالم کی پوزیشن کا فیصد معلوم کرنا (0 سے 1 کے درمیان)
+    const pctX = xCoord / rect.width;
+    const pctY = yCoord / rect.height;
+    
+    // شاداب فارمیسی کے اوریجنل فونٹ سائز اور ڈیزائن (Arial/Helvetica) سے میچنگ
+    const estimatedFontSize = Math.max(9, Math.min(12, Math.round(rect.width * 0.018)));
     
     const inputNode = document.createElement('input');
     inputNode.type = "text";
     inputNode.className = "live-tap-input-field";
     inputNode.value = ""; 
     
-    inputNode.style.left = `${xCoord - 60}px`; 
+    // الائنمنٹ کو بالکل بکس کے اندر فٹ کرنے کے لیے ان پٹ باکس کے ڈیزائن کی سیٹنگ
+    inputNode.style.position = "absolute";
+    inputNode.style.left = `${xCoord - 55}px`; 
     inputNode.style.top = `${yCoord - (estimatedFontSize / 2)}px`;
-    inputNode.style.width = "80px"; 
+    inputNode.style.width = "75px"; 
     inputNode.style.fontSize = `${estimatedFontSize}px`;
+    inputNode.style.fontFamily = "Arial, sans-serif"; // فونٹ ڈیزائن شیٹ سے بالکل میچ کرے گا
+    inputNode.style.fontWeight = "normal";
+    inputNode.style.textAlign = "right"; // ہر کالم کے اندر ڈیٹا رائٹ سائیڈ پر جڑے گا
     
-    inputNode.dataset.percentX = xCoord / rect.width;
-    inputNode.dataset.percentY = yCoord / rect.height;
+    inputNode.dataset.percentX = pctX;
+    inputNode.dataset.percentY = pctY;
     inputNode.dataset.fontSizePt = estimatedFontSize;
 
-    // چیک کریں اگر ٹیپ دائیں طرف آخری کالم (Received) کے پاس ہوا ہے
-    if (xCoord > (rect.width * 0.8)) {
+    // کالم چیکر: اگر یوزر نے شیٹ کی 82% چوڑائی سے آگے ٹیپ کیا ہے تو وہ 'Received' کالم ہے
+    if (pctX >= 0.82) {
         inputNode.classList.add('received-amount-field');
         inputNode.oninput = function() { calculateReceivedTotal(); };
+    } 
+    // اگر یوزر نے 70% اور 82% چوڑائی کے درمیان ٹیپ کیا ہے تو وہ 'Return/Exp' کالم ہے
+    else if (pctX >= 0.70 && pctX < 0.82) {
+        inputNode.classList.add('return-amount-field');
     }
 
-    // ENTER KEY NAVIGATOR: اینٹر دباتے ہی اگلے ان پٹ پر خودکار جمپ
+    // ENTER KEY NAVIGATOR: اینٹر دباتے ہی اگلی انٹری پر جمپ
     inputNode.onkeydown = function(e) {
         if (e.key === "Enter") {
             e.preventDefault();
@@ -676,7 +690,6 @@ function handleCanvasTap(event) {
     setTimeout(() => inputNode.focus(), 60);
 }
 
-// لائیو کیلکولیٹر انجن
 function calculateReceivedTotal() {
     const receivedFields = document.querySelectorAll('.received-amount-field');
     let totalSum = 0;
@@ -686,7 +699,7 @@ function calculateReceivedTotal() {
         if (!isNaN(val)) totalSum += val;
     });
     window.lastCalculatedTotal = totalSum;
-    console.log("Current Received Total: ", totalSum);
+    console.log("Updated Grand Total Received: ", totalSum);
 }
         
 
