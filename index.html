@@ -283,17 +283,23 @@
 
         /* Dynamic Font Matching Output Injection Elements */
         .live-tap-input-field {
-            position: absolute;
-            background: rgba(255, 255, 255, 0.85);
-            border: 1px solid var(--cs-green);
-            color: #000000;
-            font-family: inherit;
-            font-size: 14px;
-            outline: none;
-            padding: 1px 4px;
-            border-radius: 2px;
-            z-index: 2100;
-        }
+    position: absolute;
+    background: transparent;
+    border: none;
+    color: #000000;
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 14px;
+    outline: none;
+    padding: 0;
+    margin: 0;
+    z-index: 2100;
+    text-align: right;
+}
+.live-tap-input-field:focus {
+    background: rgba(11, 179, 118, 0.05);
+    border-bottom: 1px dashed var(--cs-green);
+}
+        
 
         /* Production Filters Strip layout */
         .filter-strip-box {
@@ -689,13 +695,16 @@
             if (textVal && textVal !== "Tap & Write...") {
                 pdf.setFont("Courier", "bold");
                 pdf.setFontSize(sizePt * 0.85); // Calibration for millimetric layout
-                pdf.setTextColor(20, 20, 20); // Natural high-contrast ink tint
+                pdf.setTextColor(40, 40, 40); // Natural high-contrast ink tint
                 
                 const targetX = px * pdfWidth;
                 const targetY = py * pdfHeight;
-                pdf.text(textVal, targetX, targetY);
+                
+                // FIXED: Added right alignment so data fits pharmacy columns perfectly
+                pdf.text(textVal, targetX, targetY, { align: "right" });
             }
         });
+        
 
         const outputBlob = pdf.output('blob');
         const generatedName = "MS_Scan_" + Math.floor(Math.random() * 89999 + 10000) + ".pdf";
