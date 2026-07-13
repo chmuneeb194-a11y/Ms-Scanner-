@@ -470,10 +470,14 @@
     </div>
 
         <script>
+    <!-- ========================================== -->
+    <!-- MASTER JAVASCRIPT ENGINE (UNIVERSAL FIX)   -->
+    <!-- ========================================== -->
     <script>
-        const webcamStream = document.getElementById('webcamStream');
-        const capturePreview = document.getElementById('capturePreview');
-        const sidebarMenu = document.getElementById('sidebarMenu');
+        // Core Elements - Fallbacks Added to Prevent Crashing
+        const webcamStream = document.getElementById('webcamStream') || document.querySelector('video');
+        const capturePreview = document.getElementById('capturePreview') || document.querySelector('img');
+        const sidebarMenu = document.getElementById('sidebarMenu') || document.querySelector('.sidebar');
         const invoiceGridOverlay = document.getElementById('invoiceGridOverlay');
         const ocrResultModal = document.getElementById('ocrResultModal');
         const flashToggleBtn = document.getElementById('flashToggleBtn');
@@ -490,10 +494,11 @@
         });
 
         // ==========================================
-        // START: FIXED RESPONSIVE CAMERA SYSTEM
+        // 1. CAMERA INITIALIZATION (SAFE RESOLUTION)
         // ==========================================
         async function initializeCameraSystem() {
-            // Using flexible constraints so it works perfectly on all smartphones without crashing
+            if (!webcamStream) return;
+            
             const streamConstraints = {
                 video: {
                     facingMode: 'environment',
@@ -507,76 +512,34 @@
                 localVideoStream = await navigator.mediaDevices.getUserMedia(streamConstraints);
                 webcamStream.srcObject = localVideoStream;
                 activeVideoTrack = localVideoStream.getVideoTracks()[0];
-                document.getElementById('laserLine').style.display = 'block';
+                
+                const laser = document.getElementById('laserLine');
+                if (laser) laser.style.display = 'block';
             } catch (cameraError) {
-                console.error("Standard resolution failed, entering global fallback:", cameraError);
+                console.error("Camera fail, trying absolute fallback:", cameraError);
                 try {
-                    // Ultimate fallback for basic mobile devices
                     localVideoStream = await navigator.mediaDevices.getUserMedia({ video: true });
                     webcamStream.srcObject = localVideoStream;
                     activeVideoTrack = localVideoStream.getVideoTracks()[0];
-                } catch(fallbackError) {
-                    console.error("Camera completely restricted by hardware/permissions.");
+                } catch(e) {
+                    console.error("Camera access blocked.");
                 }
             }
         }
 
         // ==========================================
-        // START: AUTOMATED PWA APP INSTALLATION POPUP
+        // 2. SIDEBAR THREE-LINE MENU TOGGLE
         // ==========================================
-        function setupAppInstallationEngine() {
-            window.addEventListener('beforeinstallprompt', (e) => {
-                // Prevent the older default browser banner from showing automatically
-                e.preventDefault();
-                deferredPrompt = e;
-                
-                // Create a premium, non-intrusive bottom snackbar for application installation
-                const installBanner = document.createElement('div');
-                installBanner.id = 'pwaInstallBanner';
-                installBanner.style.position = 'fixed';
-                installBanner.style.bottom = '20px';
-                installBanner.style.left = '50%';
-                installBanner.style.transform = 'translateX(-50%)';
-                installBanner.style.background = 'rgba(22, 25, 35, 0.95)';
-                installBanner.style.border = '1px solid var(--accent-glow)';
-                installBanner.style.padding = '15px 25px';
-                installBanner.style.borderRadius = '16px';
-                installBanner.style.boxShadow = 'var(--neon-shadow)';
-                installBanner.style.zIndex = '9999';
-                installBanner.style.display = 'flex';
-                installBanner.style.alignItems = 'center';
-                installBanner.style.gap = '15px';
-                installBanner.style.backdropFilter = 'blur(10px)';
-                
-                installBanner.innerHTML = `
-                    <span style="color: #fff; font-size: 0.9rem; font-weight: 600;">Install MS CamScanner?</span>
-                    <button id='btnInstallPWA' style='background: var(--accent-glow); color: var(--bg-main); border:none; padding: 8px 16px; border-radius: 10px; font-weight: bold; cursor: pointer;'>Install</button>
-                `;
-                
-                document.body.appendChild(installBanner);
-
-                document.getElementById('btnInstallPWA').addEventListener('click', async () => {
-                    if (deferredPrompt) {
-                        deferredPrompt.prompt();
-                        const { outcome } = await deferredPrompt.userChoice;
-                        if (outcome === 'accepted') {
-                            console.log('User accepted the MS Scanner installation.');
-                        }
-                        deferredPrompt = null;
-                        installBanner.remove();
-                    }
-                });
-            });
-
-            window.addEventListener('appinstalled', () => {
-                console.log('MS Scanner successfully added to local device home screen.');
-                const banner = document.getElementById('pwaInstallBanner');
-                if (banner) banner.remove();
-            });
+        function toggleSidebar() {
+            if (sidebarMenu) {
+                sidebarMenu.classList.toggle('active');
+            } else {
+                console.error("Sidebar element not found! Check if id='sidebarMenu' exists.");
+            }
         }
 
         // ==========================================
-        // START: NATIVE HARDWARE FLASHLIGHT CONTROL
+        // 3. FLASHLIGHT CONTROLLER
         // ==========================================
         async function toggleHardwareFlash() {
             if (!activeVideoTrack) return;
@@ -588,12 +551,14 @@
                         advanced: [{ torch: isFlashActive }]
                     });
                     
-                    if (isFlashActive) {
-                        flashToggleBtn.style.background = "var(--accent-glow)";
-                        flashToggleBtn.style.color = "var(--bg-main)";
-                    } else {
-                        flashToggleBtn.style.background = "rgba(255, 255, 255, 0.05)";
-                        flashToggleBtn.style.color = "var(--text-primary)";
+                    if (flashToggleBtn) {
+                        if (isFlashActive) {
+                            flashToggleBtn.style.background = "var(--accent-glow)";
+                            flashToggleBtn.style.color = "var(--bg-main)";
+                        } else {
+                            flashToggleBtn.style.background = "rgba(255, 255, 255, 0.05)";
+                            flashToggleBtn.style.color = "var(--text-primary)";
+                        }
                     }
                 }
             } catch (flashErr) {
@@ -602,10 +567,50 @@
         }
 
         // ==========================================
-        // START: HIGH-DEFINITION SHUTTER CAPTURE
+        // 4. PWA APP INSTALLATION (THREE-LINE MENU BUTTON)
+        // ==========================================
+        function setupAppInstallationEngine() {
+            // Find or dynamically inject the Install button into your Three-Line Sidebar Menu
+            let installBtn = document.getElementById('menuInstallBtn');
+            
+            window.addEventListener('beforeinstallprompt', (e) => {
+                e.preventDefault();
+                deferredPrompt = e;
+                
+                // If the button exists in your HTML sidebar, make it visible/active
+                if (installBtn) {
+                    installBtn.style.display = 'block';
+                    installBtn.style.opacity = '1';
+                }
+            });
+
+            // Fallback: If button is clicked
+            window.addEventListener('click', async (e) => {
+                if (e.target && e.target.id === 'menuInstallBtn') {
+                    if (deferredPrompt) {
+                        deferredPrompt.prompt();
+                        const { outcome } = await deferredPrompt.userChoice;
+                        if (outcome === 'accepted') {
+                            if (installBtn) installBtn.style.display = 'none';
+                        }
+                        deferredPrompt = null;
+                    } else {
+                        console.log("App is already installed or manifest is not ready.");
+                    }
+                }
+            });
+
+            window.addEventListener('appinstalled', () => {
+                if (installBtn) installBtn.style.display = 'none';
+                deferredPrompt = null;
+            });
+        }
+
+        // ==========================================
+        // 5. DOCUMENT CAPTURE & UTILITIES
         // ==========================================
         function executeShutterCapture() {
-            if (!localVideoStream) return;
+            if (!localVideoStream || !webcamStream) return;
 
             const trackingCanvas = document.createElement('canvas');
             trackingCanvas.width = webcamStream.videoWidth || 1280;
@@ -614,34 +619,30 @@
             const context2D = trackingCanvas.getContext('2d');
             context2D.drawImage(webcamStream, 0, 0, trackingCanvas.width, trackingCanvas.height);
             
-            trackingCanvas.toBlob((blob) => {
-                lastCapturedBlob = blob;
-            }, 'image/jpeg', 0.95);
+            trackingCanvas.toBlob((blob) => { lastCapturedBlob = blob; }, 'image/jpeg', 0.95);
 
-            const cleanImageMatrix = trackingCanvas.toDataURL('image/jpeg', 0.95);
-            capturePreview.src = cleanImageMatrix;
-            capturePreview.style.display = 'block';
+            if (capturePreview) {
+                capturePreview.src = trackingCanvas.toDataURL('image/jpeg', 0.95);
+                capturePreview.style.display = 'block';
+            }
             webcamStream.style.display = 'none';
-            document.getElementById('laserLine').style.display = 'none';
+            const laser = document.getElementById('laserLine');
+            if (laser) laser.style.display = 'none';
         }
 
-        function toggleSidebar() {
-            sidebarMenu.classList.toggle('active');
-        }
-
-        // ==========================================
-        // START: AUTOMATED INVOICE GRID OPERATIONS
-        // ==========================================
         function openInvoiceGrid() {
-            sidebarMenu.classList.remove('active');
-            invoiceGridOverlay.classList.add('active');
-            recalculateGridGrandTotal();
+            if(sidebarMenu) sidebarMenu.classList.remove('active');
+            if(invoiceGridOverlay) {
+                invoiceGridOverlay.classList.add('active');
+                recalculateGridGrandTotal();
+            }
         }
 
         function closeInvoiceGrid() {
-            invoiceGridOverlay.classList.remove('active');
-            if(webcamStream.style.display !== 'none') {
-                document.getElementById('laserLine').style.display = 'block';
+            if(invoiceGridOverlay) invoiceGridOverlay.classList.remove('active');
+            const laser = document.getElementById('laserLine');
+            if(webcamStream && webcamStream.style.display !== 'none' && laser) {
+                laser.style.display = 'block';
             }
         }
 
@@ -650,28 +651,26 @@
             const columns = tableRow.querySelectorAll('input');
             const quantity = parseFloat(columns[1].value) || 0;
             const ratePerUnit = parseFloat(columns[2].value) || 0;
-            
             columns[3].value = (quantity * ratePerUnit).toFixed(2);
             recalculateGridGrandTotal();
         }
 
         function recalculateGridGrandTotal() {
             const tableBody = document.getElementById('invoiceTableBody');
+            if (!tableBody) return;
             const rows = tableBody.querySelectorAll('tr');
             let runningTotal = 0;
-
             rows.forEach(row => {
                 const rowFields = row.querySelectorAll('input');
-                if (rowFields.length >= 4) {
-                    runningTotal += parseFloat(rowFields[3].value) || 0;
-                }
+                if (rowFields.length >= 4) runningTotal += parseFloat(rowFields[3].value) || 0;
             });
-
-            document.getElementById('gridGrandTotal').innerText = runningTotal.toFixed(2);
+            const grandTotalEl = document.getElementById('gridGrandTotal');
+            if (grandTotalEl) grandTotalEl.innerText = runningTotal.toFixed(2);
         }
 
         function addNewGridRow() {
             const tableBody = document.getElementById('invoiceTableBody');
+            if (!tableBody) return;
             const newRow = document.createElement('tr');
             newRow.innerHTML = `
                 <td><input type="text" placeholder="Enter Item Description..."></td>
@@ -682,49 +681,34 @@
             tableBody.appendChild(newRow);
         }
 
-        // ==========================================
-        // START: ADVANCED TEXT EXTRACTION ENGINE (OCR)
-        // ==========================================
         function triggerHandwritingScan() {
-            sidebarMenu.classList.remove('active');
-            
+            if(sidebarMenu) sidebarMenu.classList.remove('active');
             const targetTextArea = document.getElementById('ocrTargetTextarea');
-            targetTextArea.value = 
-                "SHADAB PHARMACY (SAHIWAL)\n" +
-                "Date: 13-07-2026\n" +
-                "-------------------------------------\n" +
-                "Item 1: Clarins Ultra FLY (76ml)\n" +
-                "Qty: 10 | Rate: 892.5\n" +
-                "Total: 8925.00 PKR\n" +
-                "-------------------------------------\n" +
-                "Discount: 10% (892.5 PKR)\n" +
-                "Net Amount: 8032.5 PRK\n" +
-                "-------------------------------------\n" +
-                "NOTE: Shadab Pharmacy will not be held responsible for short expiry or expired stock.";
-            
-            ocrResultModal.classList.add('active');
+            if (targetTextArea) {
+                targetTextArea.value = 
+                    "SHADAB PHARMACY (SAHIWAL)\nDate: 13-07-2026\n" +
+                    "-------------------------------------\n" +
+                    "Item 1: Clarins Ultra FLY (76ml)\nQty: 10 | Rate: 892.5\nTotal: 8925.00 PKR\n" +
+                    "-------------------------------------\nDiscount: 10% (892.5 PKR)\nNet Amount: 8032.5 PRK\n" +
+                    "-------------------------------------\n" +
+                    "NOTE: Shadab Pharmacy will not be held responsible for short expiry or expired stock.";
+            }
+            if(ocrResultModal) ocrResultModal.classList.add('active');
         }
 
         function closeOcrModal() {
-            ocrResultModal.classList.remove('active');
+            if(ocrResultModal) ocrResultModal.classList.remove('active');
         }
 
         function copyOcrTextToClipboard() {
-            const textToCopy = document.getElementById('ocrTargetTextarea').value;
-            navigator.clipboard.writeText(textToCopy);
+            const targetTextArea = document.getElementById('ocrTargetTextarea');
+            if(targetTextArea) navigator.clipboard.writeText(targetTextArea.value);
         }
 
-        // ==========================================
-        // START: NATIVE OS SHARE ENGINE (PDF & IMAGE)
-        // ==========================================
         async function dispatchFormatSelector() {
-            if (!lastCapturedBlob) {
-                executeShutterCapture();
-            }
-
+            if (!lastCapturedBlob) executeShutterCapture();
             try {
                 const documentFile = new File([lastCapturedBlob], "MS-Scanner-Doc.pdf", { type: "application/pdf" });
-                
                 if (navigator.canShare && navigator.canShare({ files: [documentFile] })) {
                     await navigator.share({
                         files: [documentFile],
@@ -738,14 +722,13 @@
                     downloadLink.click();
                 }
             } catch (shareError) {
-                console.error("Native share interrupted or cancelled.");
+                console.error("Share action cancelled.");
             }
         }
 
         function exportGridToExcel() {
             const csvRows = [];
             const rows = document.querySelectorAll("#invoiceDataTable tr");
-            
             for (let i = 0; i < rows.length; i++) {
                 const row = [], cols = rows[i].querySelectorAll("td input, th");
                 for (let j = 0; j < cols.length; j++) {
@@ -753,7 +736,6 @@
                 }
                 csvRows.push(row.join(","));
             }
-            
             const csvContent = "data:text/csv;charset=utf-8," + csvRows.join("\n");
             const encodedUri = encodeURI(csvContent);
             const link = document.createElement("a");
@@ -764,14 +746,9 @@
             document.body.removeChild(link);
         }
     </script>
-    ```
-
-### 💡 اہم نوٹ (ایپ انسٹالیشن پاپ اپ کے لیے):
-موبائل ایپس کا "Install App" بینر صرف تبھی شو ہوتا ہے جب دو شرطیں پوری ہوں:
-1. آپ کی ویب سائٹ پر **`manifest.json`** فائل اور **Service Worker** اٹیچ ہو (جو گٹ ہب پیجز پر PWA رن کرنے کے لیے ضروری ہے)۔
-2. آپ کی سائٹ **HTTPS (سیکیور کنکشن)** پر لائیو چل رہی ہو۔
-
-اس کوڈ کو سیو کر کے گٹ ہب پر پش کریں، کیمرہ اب فرسٹ کلاس اوپن ہوگا۔
+    <!-- ========================================== -->
+    <!-- END MASTER JAVASCRIPT ENGINE               -->
+    <!-- ========================================== -->
     
 
         </script>
