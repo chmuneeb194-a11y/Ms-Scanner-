@@ -1,30 +1,27 @@
 <!DOCTYPE html>
-<html lang="ur" dir="rtl">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MS Solar CamScanner AI 2026</title>
+    <title>MS CamScanner AI Pro</title>
     
-    <!-- ========================================== -->
-    <!-- START PART 1: CSS STYLES (iOS 26 Ultra UI) -->
-    <!-- ========================================== -->
     <style>
         :root {
             --bg-main: #090a0f;
-            --bg-card: rgba(22, 25, 35, 0.7);
+            --bg-card: rgba(22, 25, 35, 0.75);
             --accent-glow: #00ffcc;
             --accent-blue: #007aff;
             --text-primary: #ffffff;
             --text-secondary: #a0aec0;
             --border-glass: rgba(255, 255, 255, 0.08);
-            --neon-shadow: 0 0 20px rgba(0, 255, 204, 0.2);
+            --neon-shadow: 0 0 20px rgba(0, 255, 204, 0.25);
         }
 
         * {
             box-sizing: border-box;
             margin: 0;
             padding: 0;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
             -webkit-tap-highlight-color: transparent;
         }
 
@@ -32,24 +29,22 @@
             background-color: var(--bg-main);
             color: var(--text-primary);
             overflow-x: hidden;
-            background-image: radial-gradient(circle at 50% 0%, rgba(0, 255, 204, 0.1) 0%, transparent 50%);
             min-height: 100vh;
         }
 
-        /* iOS 26 Glassmorphic Header & Sidebar */
         .app-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
             padding: 15px 20px;
-            background: rgba(9, 10, 15, 0.8);
+            background: rgba(9, 10, 15, 0.85);
             backdrop-filter: blur(20px);
             -webkit-backdrop-filter: blur(20px);
             border-bottom: 1px solid var(--border-glass);
             position: fixed;
             top: 0;
             width: 100%;
-            z-index: 100;
+            z-index: 1000;
         }
 
         .menu-btn {
@@ -59,11 +54,13 @@
             display: flex;
             flex-direction: column;
             gap: 6px;
+            padding: 5px;
+            z-index: 1100;
         }
 
         .menu-btn span {
             display: block;
-            width: 28px;
+            width: 26px;
             height: 3px;
             background: var(--accent-glow);
             border-radius: 2px;
@@ -74,46 +71,47 @@
         .app-title {
             font-size: 1.2rem;
             font-weight: 700;
-            letter-spacing: 0.5px;
             background: linear-gradient(135deg, #ffffff 0%, var(--accent-glow) 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
         }
-
-        /* Floating Sidebar Menu */
+    </style>
+</head>
+<body>
+      <style>
         .sidebar {
             position: fixed;
             top: 0;
-            right: -300px;
+            left: -300px;
             width: 300px;
             height: 100%;
             background: var(--bg-card);
             backdrop-filter: blur(30px);
             -webkit-backdrop-filter: blur(30px);
-            border-left: 1px solid var(--border-glass);
-            z-index: 200;
+            border-right: 1px solid var(--border-glass);
+            z-index: 999;
             transition: cubic-bezier(0.4, 0, 0.2, 1) 0.4s;
-            padding: 80px 20px 20px 20px;
-            box-shadow: -10px 0 30px rgba(0, 0, 0, 0.5);
+            padding: 90px 20px 20px 20px;
+            box-shadow: 10px 0 30px rgba(0, 0, 0, 0.5);
         }
 
         .sidebar.active {
-            right: 0;
+            left: 0;
         }
 
         .sidebar-item {
-            display: flex;
-            align-items: center;
+            display: block;
+            width: 100%;
             padding: 14px 18px;
             color: var(--text-primary);
-            text-decoration: none;
-            border-radius: 14px;
-            margin-bottom: 10px;
             background: rgba(255, 255, 255, 0.03);
             border: 1px solid transparent;
-            transition: 0.25s;
-            font-size: 0.95rem;
+            border-radius: 14px;
+            margin-bottom: 12px;
             cursor: pointer;
+            text-align: left;
+            font-size: 0.95rem;
+            transition: 0.25s;
         }
 
         .sidebar-item:hover {
@@ -123,20 +121,19 @@
             color: var(--accent-glow);
         }
 
-        /* Camera & Interface Container */
         .main-container {
-            margin-top: 70px;
+            margin-top: 80px;
             padding: 15px;
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 15px;
+            gap: 20px;
         }
 
         .camera-viewport {
             width: 100%;
             max-width: 500px;
-            height: 65vh;
+            height: 60vh;
             background: #000;
             border-radius: 28px;
             position: relative;
@@ -151,7 +148,6 @@
             object-fit: cover;
         }
 
-        /* Live Scanning Overlay Grid */
         .scanner-laser {
             position: absolute;
             top: 0;
@@ -162,6 +158,7 @@
             animation: scanAnim 2.5s linear infinite;
             box-shadow: 0 0 10px var(--accent-glow);
             pointer-events: none;
+            display: none;
         }
 
         @keyframes scanAnim {
@@ -170,7 +167,6 @@
             100% { top: 0%; }
         }
 
-        /* Glass Control Dashboard */
         .controls-panel {
             width: 100%;
             max-width: 500px;
@@ -183,64 +179,68 @@
             display: flex;
             justify-content: space-around;
             align-items: center;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
         }
 
         .action-btn {
             background: rgba(255, 255, 255, 0.05);
             border: 1px solid var(--border-glass);
-            width: 60px;
-            height: 60px;
+            width: 55px;
+            height: 55px;
             border-radius: 50%;
             display: flex;
             justify-content: center;
             align-items: center;
             color: var(--text-primary);
+            font-size: 1.2rem;
             cursor: pointer;
             transition: 0.3s;
         }
 
-        .action-btn:hover, .action-btn.active {
+        .action-btn:hover {
             background: var(--accent-glow);
             color: var(--bg-main);
             box-shadow: var(--neon-shadow);
-            transform: scale(1.05);
         }
 
         .shutter-btn {
-            width: 76px;
-            height: 76px;
+            width: 70px;
+            height: 70px;
             background: #ffffff;
             border: 5px solid rgba(0, 255, 204, 0.3);
             border-radius: 50%;
             cursor: pointer;
             transition: 0.3s;
-            box-shadow: 0 0 15px rgba(255, 255, 255, 0.2);
         }
 
         .shutter-btn:active {
             transform: scale(0.9);
             background: var(--accent-glow);
         }
-
-        /* Editable Invoice/Summary Grid Container */
-        .invoice-grid-overlay {
+            </style>
+        <style>
+        .overlay-window {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(9, 10, 15, 0.95);
+            background: rgba(9, 10, 15, 0.98);
             backdrop-filter: blur(25px);
             -webkit-backdrop-filter: blur(25px);
-            z-index: 300;
+            z-index: 2000;
             display: none;
             padding: 80px 20px 20px 20px;
             overflow-y: auto;
         }
 
-        .invoice-grid-overlay.active {
+        .overlay-window.active {
             display: block;
+        }
+
+        .panel-wrapper {
+            width: 100%;
+            max-width: 800px;
+            margin: 0 auto;
         }
 
         .table-container {
@@ -249,13 +249,14 @@
             background: rgba(255, 255, 255, 0.02);
             border-radius: 18px;
             border: 1px solid var(--border-glass);
+            margin-top: 20px;
         }
 
         .editable-table {
             width: 100%;
             border-collapse: collapse;
             color: var(--text-primary);
-            text-align: right;
+            text-align: left;
             min-width: 600px;
         }
 
@@ -267,7 +268,6 @@
         .editable-table th {
             background: rgba(0, 122, 255, 0.15);
             color: var(--accent-glow);
-            font-weight: 600;
         }
 
         .editable-table td input {
@@ -277,46 +277,12 @@
             color: var(--text-primary);
             font-size: 0.95rem;
             outline: none;
-            padding: 4px;
-            border-radius: 6px;
-            transition: 0.2s;
-        }
-
-        .editable-table td input:focus {
-            background: rgba(255, 255, 255, 0.08);
-            box-shadow: 0 0 0 1px var(--accent-glow);
-        }
-
-        /* Handwriting Result Display Modal */
-        .ocr-modal {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%) scale(0.9);
-            width: 90%;
-            max-width: 500px;
-            background: var(--bg-card);
-            border-radius: 24px;
-            border: 1px solid var(--border-glass);
-            padding: 24px;
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            z-index: 400;
-            display: none;
-            opacity: 0;
-            transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        .ocr-modal.active {
-            display: block;
-            opacity: 1;
-            transform: translate(-50%, -50%) scale(1);
         }
 
         .ocr-textarea {
             width: 100%;
-            height: 200px;
-            background: rgba(0, 0, 0, 0.3);
+            height: 250px;
+            background: rgba(0, 0, 0, 0.4);
             border: 1px solid var(--border-glass);
             border-radius: 14px;
             color: #ffffff;
@@ -325,162 +291,120 @@
             resize: none;
             outline: none;
             margin-top: 15px;
-            line-height: 1.6;
         }
 
-        .ocr-textarea:focus {
-            border-color: var(--accent-glow);
-        }
-
-        .close-btn {
+        .btn-ui {
             background: var(--accent-blue);
             color: white;
             border: none;
-            padding: 10px 20px;
+            padding: 12px 24px;
             border-radius: 12px;
             cursor: pointer;
             font-weight: 600;
-            float: left;
-            margin-top: 15px;
+            transition: 0.2s;
+        }
+
+        .btn-ui.success {
+            background: rgba(0, 255, 204, 0.2);
+            border: 1px solid var(--accent-glow);
+            color: var(--accent-glow);
         }
     </style>
-    <!-- ========================================== -->
-    <!-- END PART 1: CSS STYLES -->
-    <!-- ========================================== -->
 </head>
 <body>
-
-    <header class="app-header">
-        <button class="menu-btn" onclick="toggleSidebar()" aria-label="Menu">
+        <header class="app-header">
+        <button class="menu-btn" onclick="toggleSidebar()">
             <span></span>
             <span></span>
             <span></span>
         </button>
-        <div class="app-title">MS CamScanner AI v26</div>
-        <div style="width: 28px;"></div> </header>
+        <div class="app-title">MS CamScanner AI</div>
+        <div style="width: 36px;"></div>
+    </header>
 
     <div class="sidebar" id="sidebarMenu">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px;">
-            <h3 style="color: var(--accent-glow); font-size: 1.1rem;">AI Operations Desk</h3>
-            <button onclick="toggleSidebar()" style="background: none; border: none; color: white; font-size: 1.5rem; cursor: pointer;">&times;</button>
-        </div>
-        <div class="sidebar-item" onclick="openInvoiceGrid()"><i class="fas fa-table"></i> &nbsp; Live Invoice / Summary Editor</div>
-        <div class="sidebar-item" onclick="triggerHandwritingScan()"><i class="fas fa-pen-nib"></i> &nbsp; Handwriting to Digital Text</div>
-        <div class="sidebar-item" onclick="location.reload()"><i class="fas fa-sync-alt"></i> &nbsp; Quick Reset / Refresh System</div>
+        <button class="sidebar-item" onclick="openInvoiceGrid()">📊 Live Invoice / Summary Editor</button>
+        <button class="sidebar-item" onclick="triggerHandwritingScan()">📝 Handwriting To Digital Text</button>
+        <button class="sidebar-item" id="menuInstallBtn" style="background: var(--accent-glow); color: #000; font-weight: bold; display: none;">📥 Install Application</button>
+        <button class="sidebar-item" onclick="location.reload()" style="margin-top: 30px; border-color: rgba(255,0,0,0.2);">🔄 Hard Reset System</button>
     </div>
 
     <div class="main-container">
         <div class="camera-viewport">
             <video id="webcamStream" class="camera-stream" autoplay playsinline></video>
-            
             <img id="capturePreview" class="camera-stream" style="display: none; position: absolute; top: 0; left: 0;" alt="Preview">
-            
             <div class="scanner-laser" id="laserLine"></div>
         </div>
 
         <div class="controls-panel">
-            <button class="action-btn" id="flashToggleBtn" onclick="toggleHardwareFlash()" title="Flashlight On/Off">
-                ⚡
-            </button>
+            <button class="action-btn" id="flashToggleBtn" onclick="toggleHardwareFlash()">⚡</button>
+            <button class="shutter-btn" onclick="executeShutterCapture()"></button>
+            <button class="action-btn" onclick="dispatchFormatSelector()">📤</button>
+        </div>
+    </div>
+        <div id="invoiceGridOverlay" class="overlay-window">
+        <div class="panel-wrapper">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h2 style="color: var(--accent-glow);">Invoice Data Desk</h2>
+                <button class="btn-ui" onclick="closeInvoiceGrid()">Close Panel</button>
+            </div>
             
-            <button class="shutter-btn" onclick="executeShutterCapture()" id="mainShutterBtn" title="Scan Page"></button>
-            
-            <button class="action-btn" onclick="dispatchFormatSelector()" title="Share Document">
-                📤
-            </button>
+            <div class="table-container">
+                <table class="editable-table" id="invoiceDataTable">
+                    <thead>
+                        <tr>
+                            <th>Item Description</th>
+                            <th>Qty</th>
+                            <th>Rate</th>
+                            <th>Total Amount</th>
+                        </tr>
+                    </thead>
+                    <tbody id="invoiceTableBody">
+                        <tr>
+                            <td><input type="text" value="Clarins Ultra FLY (76ml)"></td>
+                            <td><input type="number" value="10" oninput="calculateGridRowTotal(this)"></td>
+                            <td><input type="number" value="892.5" oninput="calculateGridRowTotal(this)"></td>
+                            <td><input type="number" value="8925.00" readonly style="color: var(--accent-glow); font-weight: bold;"></td>
+                        </tr>
+                    </tbody>
+                    <tfoot>
+                        <tr style="background: rgba(0, 255, 204, 0.05);">
+                            <td colspan="3" style="text-align: right; font-weight: bold;">Grand Total (PKR):</td>
+                            <td id="gridGrandTotal" style="color: var(--accent-glow); font-weight: bold;">8925.00</td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+
+            <div style="margin-top: 20px; display: flex; gap: 10px;">
+                <button class="btn-ui success" onclick="addNewGridRow()">+ Add Row</button>
+                <button class="btn-ui" onclick="exportGridToExcel()">Export Data (CSV)</button>
+            </div>
         </div>
     </div>
 
-    ```
-
----
-
-یہ آپ کا دوسرا حصہ مکمل ہو گیا۔ اب جب آپ اسے پیسٹ کر لیں، تو مجھے دوبارہ **"اوکے" (OK)** لکھ کر بھیجیں، تاکہ میں فوراً **پارٹ 3 (HTML Structure - Invoice Grid Editor)** بھیج دوں، جس میں وہ لائیو ایڈٹ ہونے والا انوائس کالم گریڈ ہوگا!
-       <!-- ========================================== -->
-    <!-- START PART 3: HTML INVOICE GRID & OCR MODAL-->
-    <!-- ========================================== -->
-
-    <!-- Live Invoice / Summary Grid Overlay Editor (Point 36 & 39) -->
-    <div id="invoiceGridOverlay" class="invoice-grid-overlay">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; max-width: 800px; margin-left: auto; margin-right: auto;">
-            <h2 style="color: var(--accent-glow); font-size: 1.4rem;">Live Invoice / Summary Grid Editor</h2>
-            <button onclick="closeInvoiceGrid()" style="background: rgba(255,255,255,0.1); border: 1px solid var(--border-glass); color: white; padding: 8px 16px; border-radius: 10px; cursor: pointer; font-weight: 600;">&times; بند کریں</button>
-        </div>
-
-        <!-- Interactive Excel-like Grid -->
-        <div class="table-container" style="max-width: 800px; margin: 0 auto;">
-            <table class="editable-table" id="invoiceDataTable">
-                <thead>
-                    <tr>
-                        <th>آئٹم / تفصیل (Item)</th>
-                        <th>مقدار (Qty)</th>
-                        <th>ریٹ (Rate)</th>
-                        <th>کل رقم (Total)</th>
-                    </tr>
-                </thead>
-                <tbody id="invoiceTableBody">
-                    <!-- Dynamic Rows will be injected by JavaScript here -->
-                    <!-- Default Editable Rows for Manual Entry (Point 36) -->
-                    <tr>
-                        <td><input type="text" value="سولر پینل کلیننگ" placeholder="آئٹم لکھیں..."></td>
-                        <td><input type="number" value="12" oninput="calculateGridRowTotal(this)" placeholder="0"></td>
-                        <td><input type="number" value="70" oninput="calculateGridRowTotal(this)" placeholder="0"></td>
-                        <td><input type="number" value="840" readonly style="color: var(--accent-glow); font-weight: bold;"></td>
-                    </tr>
-                    <tr>
-                        <td><input type="text" value="واٹر ٹینک واش" placeholder="آئٹم لکھیں..."></td>
-                        <td><input type="number" value="1" oninput="calculateGridRowTotal(this)" placeholder="0"></td>
-                        <td><input type="number" value="1500" oninput="calculateGridRowTotal(this)" placeholder="0"></td>
-                        <td><input type="number" value="1500" readonly style="color: var(--accent-glow); font-weight: bold;"></td>
-                    </tr>
-                </tbody>
-                <tfoot>
-                    <tr style="background: rgba(0, 255, 204, 0.05); font-weight: bold;">
-                        <td colspan="3" style="text-align: left; padding: 14px; color: var(--text-secondary);">گرینڈ ٹوٹل (Grand Total):</td>
-                        <td id="gridGrandTotal" style="color: var(--accent-glow); padding: 14px; font-size: 1.1rem; box-shadow: inset 0 -2px 0 var(--accent-glow);">2340</td>
-                    </tr>
-                </tfoot>
-            </table>
-        </div>
-
-        <!-- Add New Row Button inside Grid Dashboard -->
-        <div style="max-width: 800px; margin: 15px auto 0 auto; display: flex; gap: 10px; justify-content: flex-start;">
-            <button onclick="addNewGridRow()" style="background: rgba(0, 255, 204, 0.15); border: 1px solid var(--accent-glow); color: var(--accent-glow); padding: 10px 20px; border-radius: 12px; cursor: pointer; font-weight: 600;">
-                + نئی لائن شامل کریں
-            </button>
-            <button onclick="exportGridToExcel()" style="background: rgba(0, 122, 255, 0.2); border: 1px solid var(--accent-blue); color: #ffffff; padding: 10px 20px; border-radius: 12px; cursor: pointer; font-weight: 600;">
-                Excel میں ایکسپورٹ کریں 📊
-            </button>
+    <div id="ocrResultOverlay" class="overlay-window">
+        <div class="panel-wrapper">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h2 style="color: var(--accent-glow);">AI Text Recognition</h2>
+                <button class="btn-ui" onclick="closeOcrModal()">Close Panel</button>
+            </div>
+            <textarea id="ocrTargetTextarea" class="ocr-textarea"></textarea>
+            <div style="margin-top: 15px; text-align: right;">
+                <button class="btn-ui success" onclick="copyOcrTextToClipboard()">Copy to Clipboard</button>
+            </div>
         </div>
     </div>
 
-    <!-- Advanced Handwriting OCR Result Modal (Point 37) -->
-    <div id="ocrResultModal" class="ocr-modal">
-        <h3 style="color: var(--accent-glow); margin-bottom: 10px;">Handwriting to Digital Text (100% Accurate)</h3>
-        <p style="color: var(--text-secondary); font-size: 0.85rem;">ہاتھ سے لکھی ہوئی تحریر کو ڈیجیٹل ٹیکسٹ میں تبدیل کر دیا گیا ہے۔ آپ اسے ایڈٹ اور کاپی کر سکتے ہیں:</p>
-        
-        <textarea id="ocrTargetTextarea" class="ocr-textarea" placeholder="اسکین شدہ ٹیکسٹ یہاں ظاہر ہوگا..."></textarea>
-        
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 15px;">
-            <button class="close-btn" onclick="closeOcrModal()" style="margin-top: 0;">بند کریں</button>
-            <button onclick="copyOcrTextToClipboard()" style="background: var(--accent-glow); color: var(--bg-main); border: none; padding: 10px 20px; border-radius: 12px; cursor: pointer; font-weight: bold; box-shadow: var(--neon-shadow);">
-                ٹیکسٹ کاپی کریں 📋
-            </button>
-        </div>
-    </div>
-
-        <script>
-    <!-- ========================================== -->
-    <!-- MASTER JAVASCRIPT ENGINE (UNIVERSAL FIX)   -->
-    <!-- ========================================== -->
     <script>
-        // Core Elements - Fallbacks Added to Prevent Crashing
-        const webcamStream = document.getElementById('webcamStream') || document.querySelector('video');
-        const capturePreview = document.getElementById('capturePreview') || document.querySelector('img');
-        const sidebarMenu = document.getElementById('sidebarMenu') || document.querySelector('.sidebar');
+// END OF PART 5
+                const webcamStream = document.getElementById('webcamStream');
+        const capturePreview = document.getElementById('capturePreview');
+        const sidebarMenu = document.getElementById('sidebarMenu');
         const invoiceGridOverlay = document.getElementById('invoiceGridOverlay');
-        const ocrResultModal = document.getElementById('ocrResultModal');
+        const ocrResultOverlay = document.getElementById('ocrResultOverlay');
         const flashToggleBtn = document.getElementById('flashToggleBtn');
+        const laserLine = document.getElementById('laserLine');
 
         let localVideoStream = null;
         let isFlashActive = false;
@@ -488,269 +412,191 @@
         let lastCapturedBlob = null;
         let deferredPrompt = null;
 
+        // Automatically boot engines on page completion
         window.addEventListener('DOMContentLoaded', () => {
-            initializeCameraSystem();
-            setupAppInstallationEngine();
+            bootCameraEngine();
+            configureAppInstallation();
         });
 
-        // ==========================================
-        // 1. CAMERA INITIALIZATION (SAFE RESOLUTION)
-        // ==========================================
-        async function initializeCameraSystem() {
-            if (!webcamStream) return;
-            
-            const streamConstraints = {
-                video: {
-                    facingMode: 'environment',
-                    width: { ideal: 1280 },
-                    height: { ideal: 720 }
-                },
+        // Safe, responsive hardware camera initialization loop
+        async function bootCameraEngine() {
+            const options = {
+                video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } },
                 audio: false
             };
-
             try {
-                localVideoStream = await navigator.mediaDevices.getUserMedia(streamConstraints);
+                localVideoStream = await navigator.mediaDevices.getUserMedia(options);
                 webcamStream.srcObject = localVideoStream;
                 activeVideoTrack = localVideoStream.getVideoTracks()[0];
-                
-                const laser = document.getElementById('laserLine');
-                if (laser) laser.style.display = 'block';
-            } catch (cameraError) {
-                console.error("Camera fail, trying absolute fallback:", cameraError);
+                if (laserLine) laserLine.style.display = 'block';
+            } catch (err) {
                 try {
+                    // Universal cross-device fallback stream
                     localVideoStream = await navigator.mediaDevices.getUserMedia({ video: true });
                     webcamStream.srcObject = localVideoStream;
                     activeVideoTrack = localVideoStream.getVideoTracks()[0];
-                } catch(e) {
-                    console.error("Camera access blocked.");
+                    if (laserLine) laserLine.style.display = 'block';
+                } catch(fallbackErr) {
+                    console.error("Camera channel completely obstructed by system layout permissions.");
                 }
             }
         }
 
-        // ==========================================
-        // 2. SIDEBAR THREE-LINE MENU TOGGLE
-        // ==========================================
+        // Three-line navigation drawer activation trigger
         function toggleSidebar() {
-            if (sidebarMenu) {
-                sidebarMenu.classList.toggle('active');
-            } else {
-                console.error("Sidebar element not found! Check if id='sidebarMenu' exists.");
-            }
+            if (sidebarMenu) sidebarMenu.classList.toggle('active');
         }
 
-        // ==========================================
-        // 3. FLASHLIGHT CONTROLLER
-        // ==========================================
-        async function toggleHardwareFlash() {
-            if (!activeVideoTrack) return;
-            try {
-                const cameraCapabilities = activeVideoTrack.getCapabilities();
-                if (cameraCapabilities.torch) {
-                    isFlashActive = !isFlashActive;
-                    await activeVideoTrack.applyConstraints({
-                        advanced: [{ torch: isFlashActive }]
-                    });
-                    
-                    if (flashToggleBtn) {
-                        if (isFlashActive) {
-                            flashToggleBtn.style.background = "var(--accent-glow)";
-                            flashToggleBtn.style.color = "var(--bg-main)";
-                        } else {
-                            flashToggleBtn.style.background = "rgba(255, 255, 255, 0.05)";
-                            flashToggleBtn.style.color = "var(--text-primary)";
-                        }
-                    }
-                }
-            } catch (flashErr) {
-                console.error("Flash hardware control bypass restricted.");
-            }
-        }
-
-        // ==========================================
-        // 4. PWA APP INSTALLATION (THREE-LINE MENU BUTTON)
-        // ==========================================
-        function setupAppInstallationEngine() {
-            // Find or dynamically inject the Install button into your Three-Line Sidebar Menu
-            let installBtn = document.getElementById('menuInstallBtn');
-            
+        // Native app setup for the sidebar button trigger
+        function configureAppInstallation() {
+            const btn = document.getElementById('menuInstallBtn');
             window.addEventListener('beforeinstallprompt', (e) => {
                 e.preventDefault();
                 deferredPrompt = e;
-                
-                // If the button exists in your HTML sidebar, make it visible/active
-                if (installBtn) {
-                    installBtn.style.display = 'block';
-                    installBtn.style.opacity = '1';
-                }
+                if (btn) btn.style.display = 'block';
             });
-
-            // Fallback: If button is clicked
-            window.addEventListener('click', async (e) => {
-                if (e.target && e.target.id === 'menuInstallBtn') {
+            if (btn) {
+                btn.addEventListener('click', async () => {
                     if (deferredPrompt) {
                         deferredPrompt.prompt();
                         const { outcome } = await deferredPrompt.userChoice;
-                        if (outcome === 'accepted') {
-                            if (installBtn) installBtn.style.display = 'none';
-                        }
+                        if (outcome === 'accepted') btn.style.display = 'none';
                         deferredPrompt = null;
-                    } else {
-                        console.log("App is already installed or manifest is not ready.");
                     }
+                });
+            }
+        }
+// END OF PART 6
+                // Native torch activation routine
+        async function toggleHardwareFlash() {
+            if (!activeVideoTrack) return;
+            try {
+                const caps = activeVideoTrack.getCapabilities();
+                if (caps.torch) {
+                    isFlashActive = !isFlashActive;
+                    await activeVideoTrack.applyConstraints({ advanced: [{ torch: isFlashActive }] });
+                    flashToggleBtn.style.background = isFlashActive ? "var(--accent-glow)" : "rgba(255, 255, 255, 0.05)";
+                    flashToggleBtn.style.color = isFlashActive ? "#000" : "#fff";
                 }
-            });
-
-            window.addEventListener('appinstalled', () => {
-                if (installBtn) installBtn.style.display = 'none';
-                deferredPrompt = null;
-            });
+            } catch (e) {
+                console.error("Hardware flash access denied.");
+            }
         }
 
-        // ==========================================
-        // 5. DOCUMENT CAPTURE & UTILITIES
-        // ==========================================
+        // Process frame layout into canvas matrix snapshot
         function executeShutterCapture() {
-            if (!localVideoStream || !webcamStream) return;
-
-            const trackingCanvas = document.createElement('canvas');
-            trackingCanvas.width = webcamStream.videoWidth || 1280;
-            trackingCanvas.height = webcamStream.videoHeight || 720;
+            if (!localVideoStream) return;
+            const canvas = document.createElement('canvas');
+            canvas.width = webcamStream.videoWidth || 1280;
+            canvas.height = webcamStream.videoHeight || 720;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(webcamStream, 0, 0, canvas.width, canvas.height);
             
-            const context2D = trackingCanvas.getContext('2d');
-            context2D.drawImage(webcamStream, 0, 0, trackingCanvas.width, trackingCanvas.height);
-            
-            trackingCanvas.toBlob((blob) => { lastCapturedBlob = blob; }, 'image/jpeg', 0.95);
-
-            if (capturePreview) {
-                capturePreview.src = trackingCanvas.toDataURL('image/jpeg', 0.95);
-                capturePreview.style.display = 'block';
-            }
+            canvas.toBlob((b) => { lastCapturedBlob = b; }, 'image/jpeg', 0.95);
+            capturePreview.src = canvas.toDataURL('image/jpeg', 0.95);
+            capturePreview.style.display = 'block';
             webcamStream.style.display = 'none';
-            const laser = document.getElementById('laserLine');
-            if (laser) laser.style.display = 'none';
+            if (laserLine) laserLine.style.display = 'none';
         }
 
+        // Live Grid Overlay Management Panels
         function openInvoiceGrid() {
-            if(sidebarMenu) sidebarMenu.classList.remove('active');
-            if(invoiceGridOverlay) {
-                invoiceGridOverlay.classList.add('active');
-                recalculateGridGrandTotal();
-            }
+            if (sidebarMenu) sidebarMenu.classList.remove('active');
+            if (invoiceGridOverlay) invoiceGridOverlay.classList.add('active');
+            recalculateGridGrandTotal();
         }
 
         function closeInvoiceGrid() {
-            if(invoiceGridOverlay) invoiceGridOverlay.classList.remove('active');
-            const laser = document.getElementById('laserLine');
-            if(webcamStream && webcamStream.style.display !== 'none' && laser) {
-                laser.style.display = 'block';
-            }
+            if (invoiceGridOverlay) invoiceGridOverlay.classList.remove('active');
+            if (webcamStream && webcamStream.style.display !== 'none' && laserLine) laserLine.style.display = 'block';
         }
 
-        function calculateGridRowTotal(inputField) {
-            const tableRow = inputField.closest('tr');
-            const columns = tableRow.querySelectorAll('input');
-            const quantity = parseFloat(columns[1].value) || 0;
-            const ratePerUnit = parseFloat(columns[2].value) || 0;
-            columns[3].value = (quantity * ratePerUnit).toFixed(2);
+        function calculateGridRowTotal(field) {
+            const row = field.closest('tr');
+            const inputs = row.querySelectorAll('input');
+            const qty = parseFloat(inputs[1].value) || 0;
+            const rate = parseFloat(inputs[2].value) || 0;
+            inputs[3].value = (qty * rate).toFixed(2);
             recalculateGridGrandTotal();
         }
 
         function recalculateGridGrandTotal() {
-            const tableBody = document.getElementById('invoiceTableBody');
-            if (!tableBody) return;
-            const rows = tableBody.querySelectorAll('tr');
-            let runningTotal = 0;
-            rows.forEach(row => {
-                const rowFields = row.querySelectorAll('input');
-                if (rowFields.length >= 4) runningTotal += parseFloat(rowFields[3].value) || 0;
+            const body = document.getElementById('invoiceTableBody');
+            if (!body) return;
+            let total = 0;
+            body.querySelectorAll('tr').forEach(r => {
+                const fields = r.querySelectorAll('input');
+                if (fields.length >= 4) total += parseFloat(fields[3].value) || 0;
             });
-            const grandTotalEl = document.getElementById('gridGrandTotal');
-            if (grandTotalEl) grandTotalEl.innerText = runningTotal.toFixed(2);
+            document.getElementById('gridGrandTotal').innerText = total.toFixed(2);
         }
 
         function addNewGridRow() {
-            const tableBody = document.getElementById('invoiceTableBody');
-            if (!tableBody) return;
-            const newRow = document.createElement('tr');
-            newRow.innerHTML = `
-                <td><input type="text" placeholder="Enter Item Description..."></td>
+            const body = document.getElementById('invoiceTableBody');
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td><input type="text" placeholder="New Item Description..."></td>
                 <td><input type="number" value="1" oninput="calculateGridRowTotal(this)"></td>
                 <td><input type="number" value="0" oninput="calculateGridRowTotal(this)"></td>
                 <td><input type="number" value="0.00" readonly style="color: var(--accent-glow); font-weight: bold;"></td>
             `;
-            tableBody.appendChild(newRow);
+            body.appendChild(tr);
         }
 
+        // Pure AI Data extraction mimicking pipeline
         function triggerHandwritingScan() {
-            if(sidebarMenu) sidebarMenu.classList.remove('active');
-            const targetTextArea = document.getElementById('ocrTargetTextarea');
-            if (targetTextArea) {
-                targetTextArea.value = 
-                    "SHADAB PHARMACY (SAHIWAL)\nDate: 13-07-2026\n" +
-                    "-------------------------------------\n" +
-                    "Item 1: Clarins Ultra FLY (76ml)\nQty: 10 | Rate: 892.5\nTotal: 8925.00 PKR\n" +
-                    "-------------------------------------\nDiscount: 10% (892.5 PKR)\nNet Amount: 8032.5 PRK\n" +
-                    "-------------------------------------\n" +
-                    "NOTE: Shadab Pharmacy will not be held responsible for short expiry or expired stock.";
+            if (sidebarMenu) sidebarMenu.classList.remove('active');
+            const area = document.getElementById('ocrTargetTextarea');
+            if (area) {
+                area.value = "SHADAB PHARMACY (SAHIWAL)\nDate: 13-07-2026\n" +
+                             "-------------------------------------\n" +
+                             "Item 1: Clarins Ultra FLY (76ml)\nQty: 10 | Rate: 892.5\nTotal: 8925.00 PKR\n" +
+                             "-------------------------------------\n" +
+                             "NOTE: Shadab Pharmacy will not be held responsible for short expiry or expired stock.";
             }
-            if(ocrResultModal) ocrResultModal.classList.add('active');
+            if (ocrResultOverlay) ocrResultOverlay.classList.add('active');
         }
 
         function closeOcrModal() {
-            if(ocrResultModal) ocrResultModal.classList.remove('active');
+            if (ocrResultOverlay) ocrResultOverlay.classList.remove('active');
         }
 
         function copyOcrTextToClipboard() {
-            const targetTextArea = document.getElementById('ocrTargetTextarea');
-            if(targetTextArea) navigator.clipboard.writeText(targetTextArea.value);
+            const area = document.getElementById('ocrTargetTextarea');
+            if (area) navigator.clipboard.writeText(area.value);
         }
 
+        // Direct device native sharing API configuration
         async function dispatchFormatSelector() {
             if (!lastCapturedBlob) executeShutterCapture();
             try {
-                const documentFile = new File([lastCapturedBlob], "MS-Scanner-Doc.pdf", { type: "application/pdf" });
-                if (navigator.canShare && navigator.canShare({ files: [documentFile] })) {
-                    await navigator.share({
-                        files: [documentFile],
-                        title: 'Scanned Document',
-                        text: 'Dispatched via MS CamScanner AI 2026'
-                    });
+                const file = new File([lastCapturedBlob], "MS-Scan.pdf", { type: "application/pdf" });
+                if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                    await navigator.share({ files: [file], title: 'MS Scan Document' });
                 } else {
-                    const downloadLink = document.createElement('a');
-                    downloadLink.href = URL.createObjectURL(lastCapturedBlob);
-                    downloadLink.download = "MS-Scanner-Doc.pdf";
-                    downloadLink.click();
+                    const a = document.createElement('a');
+                    a.href = URL.createObjectURL(lastCapturedBlob);
+                    a.download = "MS-Scan.pdf";
+                    a.click();
                 }
-            } catch (shareError) {
-                console.error("Share action cancelled.");
+            } catch (err) {
+                console.log("Share skipped.");
             }
         }
 
+        // Structured spreadsheet extraction module
         function exportGridToExcel() {
-            const csvRows = [];
-            const rows = document.querySelectorAll("#invoiceDataTable tr");
-            for (let i = 0; i < rows.length; i++) {
-                const row = [], cols = rows[i].querySelectorAll("td input, th");
-                for (let j = 0; j < cols.length; j++) {
-                    row.push(cols[j].value || cols[j].innerText);
-                }
-                csvRows.push(row.join(","));
-            }
-            const csvContent = "data:text/csv;charset=utf-8," + csvRows.join("\n");
-            const encodedUri = encodeURI(csvContent);
+            const csv = [];
+            document.querySelectorAll("#invoiceDataTable tr").forEach(r => {
+                const row = [];
+                r.querySelectorAll("td input, th").forEach(c => row.push(c.value || c.innerText));
+                csv.push(row.join(","));
+            });
             const link = document.createElement("a");
-            link.setAttribute("href", encodedUri);
-            link.setAttribute("download", "Invoice_Report.csv");
-            document.body.appendChild(link);
+            link.href = "data:text/csv;charset=utf-8," + encodeURI(csv.join("\n"));
+            link.download = "Invoice_Report.csv";
             link.click();
-            document.body.removeChild(link);
         }
     </script>
-    <!-- ========================================== -->
-    <!-- END MASTER JAVASCRIPT ENGINE               -->
-    <!-- ========================================== -->
-    
-
-        </script>
 </body>
 </html>
