@@ -1,927 +1,212 @@
+<!-- === START: INDEX.HTML PRIMARY STRUCTURE === -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>MS CamScanner AI Pro - 2026 Production</title>
+    <title>MS CamScanner AI Workspace Pro</title>
     
-    <!-- Real-time Cropper and Image Processing Engines -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
-    
-    <!-- Genuine PDF & Office Document Compiled Packages -->
+    <!-- External Powerful Engine Libraries (2026 Layout) -->
+    <!-- PDF Generation -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
-    
-    <!-- SheetJS for Actual Grid Data to Real Excel Export -->
+    <!-- Excel Sheets Handler -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-
-    <style>
-        :root {
-            --bg-dark-main: #0b0c10;
-            --bg-card: #14161d;
-            --bg-active-tab: #1f222b;
-            --cs-green: #0bb376;
-            --cs-blue: #1a73e8;
-            --cs-red: #d93025;
-            --text-main: #ffffff;
-            --text-muted: #80868b;
-            --border-line: rgba(255, 255, 255, 0.06);
-        }
-
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            -webkit-tap-highlight-color: transparent;
-        }
-
-        body {
-            background-color: var(--bg-dark-main);
-            color: var(--text-main);
-            min-height: 100vh;
-            padding-bottom: 80px;
-            overflow-x: hidden;
-        }
-
-        .cs-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 16px 20px;
-            background: #111216;
-            border-bottom: 1px solid var(--border-line);
-            position: fixed;
-            top: 0;
-            width: 100%;
-            z-index: 1000;
-        }
-
-        .cs-logo-text {
-            font-size: 1.25rem;
-            font-weight: 700;
-            letter-spacing: 0.5px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            cursor: pointer;
-        }
-
-        .cs-logo-text span {
-            color: var(--cs-green);
-            background: rgba(11, 179, 118, 0.1);
-            padding: 2px 8px;
-            border-radius: 6px;
-            font-size: 0.8rem;
-        }
-
-        /* Hamburger Menu Panel Style */
-        .hamburger-menu-btn {
-            background: none;
-            border: none;
-            color: var(--text-main);
-            font-size: 1.5rem;
-            cursor: pointer;
-        }
-
-        .sidebar-menu {
-            position: fixed;
-            top: 0;
-            right: -280px;
-            width: 280px;
-            height: 100%;
-            background: #111216;
-            box-shadow: -5px 0 15px rgba(0,0,0,0.5);
-            z-index: 3000;
-            transition: right 0.3s ease;
-            padding: 24px;
-        }
-
-        .sidebar-menu.active { right: 0; }
-        .sidebar-item {
-            padding: 14px;
-            color: var(--text-main);
-            border-bottom: 1px solid var(--border-line);
-            cursor: pointer;
-        }
-
-        /* Live Camera Overlay Screen */
-        .camera-overlay-screen {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: #000;
-            z-index: 2500;
-            display: none;
-            flex-direction: column;
-        }
-        #webcamStream {
-            width: 100%;
-            height: 80vh;
-            object-fit: cover;
-        }
-        .cam-controls {
-            height: 20vh;
-            background: #111216;
-            display: flex;
-            justify-content: space-around;
-            align-items: center;
-        }
-
-        /* Bottom Tab Navigation Layout Container */
-        .cs-bottom-nav {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            width: 100%;
-            height: 68px;
-            background: #111216;
-            border-top: 1px solid var(--border-line);
-            display: flex;
-            justify-content: space-around;
-            align-items: center;
-            z-index: 1000;
-        }
-
-        .nav-tab {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 4px;
-            color: var(--text-muted);
-            font-size: 0.75rem;
-            background: none;
-            border: none;
-            flex: 1;
-            padding: 8px 0;
-            cursor: pointer;
-        }
-
-        .nav-tab.active { color: var(--cs-green); }
-
-        .shutter-cam-btn {
-            width: 58px;
-            height: 58px;
-            background: var(--cs-green);
-            border-radius: 50%;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            color: #ffffff;
-            font-size: 1.6rem;
-            border: 4px solid #111216;
-            box-shadow: 0 -4px 15px rgba(11, 179, 118, 0.35);
-            cursor: pointer;
-            transform: translateY(-16px);
-        }
-
-        .view-panel {
-            display: none;
-            padding: 85px 16px 20px 16px;
-            width: 100%;
-            max-width: 600px;
-            margin: 0 auto;
-        }
-
-        .view-panel.active { display: block; }
-        .section-title {
-            font-size: 1.05rem;
-            font-weight: 600;
-            margin-bottom: 16px;
-            display: flex;
-            justify-content: space-between;
-        }
-
-        .recent-card {
-            background: var(--bg-card);
-            border: 1px solid var(--border-line);
-            border-radius: 14px;
-            padding: 14px;
-            display: flex;
-            align-items: center;
-            gap: 14px;
-            margin-bottom: 12px;
-        }
-
-        .doc-icon-box {
-            width: 48px;
-            height: 48px;
-            background: rgba(11, 179, 118, 0.08);
-            border: 1px solid rgba(11, 179, 118, 0.15);
-            border-radius: 10px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            color: var(--cs-green);
-            font-weight: 700;
-        }
-        .doc-icon-box.pdf-mode {
-            background: rgba(217, 48, 37, 0.08);
-            border-color: rgba(217, 48, 37, 0.15);
-            color: var(--cs-red);
-        }
-
-        .tools-grid-box {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 12px;
-            background: var(--bg-card);
-            padding: 16px;
-            border-radius: 16px;
-        }
-
-        .tool-icon-btn {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 8px;
-            background: none;
-            border: none;
-            color: #fff;
-            cursor: pointer;
-        }
-
-        .tool-icon-circle {
-            width: 50px;
-            height: 50px;
-            border-radius: 16px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-size: 1.2rem;
-        }
-
-        /* Advanced Workspace Canvas Overlay */
-        .workspace-fullscreen {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: #000000;
-            z-index: 2000;
-            display: none;
-            flex-direction: column;
-        }
-        .workspace-fullscreen.active { display: flex; }
-
-        .canvas-container-box {
-            flex: 1;
-            position: relative;
-            overflow: auto;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            background: #090a0f;
-        }
-
-        .overlay-text-wrapper { position: relative; display: inline-block; }
-        #interactiveCanvasBase { max-width: 100%; max-height: 65vh; display: block; }
-
-        /* Dynamic Font Matching Output Injection Elements */
-        .live-tap-input-field {
-    position: absolute;
-    background: transparent;
-    border: none;
-    color: #000000;
-    font-family: 'Courier New', Courier, monospace;
-    font-size: 14px;
-    outline: none;
-    padding: 0;
-    margin: 0;
-    z-index: 2100;
-    text-align: right;
-}
-.live-tap-input-field:focus {
-    background: rgba(11, 179, 118, 0.05);
-    border-bottom: 1px dashed var(--cs-green);
-}
-        
-
-        /* Production Filters Strip layout */
-        .filter-strip-box {
-            display: flex;
-            gap: 10px;
-            padding: 10px;
-            background: #14161d;
-            overflow-x: auto;
-            border-top: 1px solid var(--border-line);
-        }
-        .filter-thumb {
-            padding: 6px 12px;
-            background: #222531;
-            border-radius: 20px;
-            font-size: 0.75rem;
-            white-space: nowrap;
-            cursor: pointer;
-            border: 1px solid transparent;
-        }
-        .filter-thumb.active {
-            background: var(--cs-green);
-            border-color: #fff;
-        }
-
-        .ws-bottom-actions {
-            height: 70px;
-            background: #111216;
-            display: flex;
-            justify-content: space-around;
-            align-items: center;
-            padding: 0 10px;
-        }
-        .btn-action-premium {
-            background: #222531;
-            border: none;
-            color: white;
-            padding: 10px 16px;
-            border-radius: 10px;
-            font-weight: 600;
-            cursor: pointer;
-        }
-        .btn-action-premium.primary { background: var(--cs-green); }
-    </style>
+    <!-- Word Document (.docx) Handler -->
+    <script src="https://cdn.jsdelivr.net/npm/mammoth@1.4.8/mammoth.browser.min.js"></script>
+    
+    <!-- Link to External Stylesheet -->
+    <link rel="stylesheet" href="style.css">
 </head>
-    <!-- ==================== START: GLOBAL LOADING SPINNER ==================== -->
-<div id="globalLoader" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:9999; justify-content:center; align-items:center; flex-direction:column;">
-    <div style="border:4px solid #f3f3f3; border-top:4px solid #0bb376; border-radius:50%; width:40px; height:40px; animation: spin 1s linear infinite;"></div>
-    <p style="color:#fff; margin-top:15px; font-family:sans-serif;">Processing AI Data...</p>
-</div>
-<style>
-    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-</style>
-<!-- ==================== END: GLOBAL LOADING SPINNER ==================== -->
-    
 <body>
-<!-- ==================== START: PWA METADATA & RESPONSIVE CONFIG ==================== -->
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="theme-color" content="#222531">
-<link rel="manifest" href="manifest.json">
-<!-- ==================== END: PWA METADATA & RESPONSIVE CONFIG ==================== -->
-    
-<!-- ==================== START: HEADER & SIDEBAR ==================== -->
-<header class="cs-header">
-    <div class="cs-logo-text" onclick="switchTab('home')">MS CamScanner <span>AI PRO</span></div>
-    <button class="hamburger-menu-btn" onclick="toggleSidebar(true)">☰</button>
-</header>
 
-<div id="sidebarMenu" class="sidebar-menu">
-    <h3 style="margin-bottom:20px; color: var(--cs-green)">Menu Options</h3>
-    <div class="sidebar-item" onclick="triggerPDFUpload()">📥 Import Remote PDF</div>
-    <div class="sidebar-item" onclick="alert('Premium Features Active')">⭐ AI Enhance Text</div>
-    <div class="sidebar-item" onclick="toggleSidebar(false)" style="color:var(--cs-red); margin-top:30px;">✕ Close Menu</div>
-</div>
-<!-- ==================== END: HEADER & SIDEBAR ==================== -->
-
-<!-- ==================== START: CAMERA OVERLAY & GUIDE ==================== -->
-<div id="cameraOverlay" class="camera-overlay-screen" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:#000; z-index:4000; flex-direction:column; justify-content:center; align-items:center;">
-    <video id="webcamStream" autoplay playsinline style="width:100%; height:100%; object-fit:cover; position:absolute;"></video>
-    <!-- یہ وہ گائیڈ باکس ہے جو شناختی کارڈ یا ڈاکومنٹ کے لیے کام کرے گا -->
-    <div id="cameraFrameGuide" style="position:relative; border:2px dashed #fff; border-radius:8px; pointer-events:none; z-index:4100; transition: all 0.3s ease; width:90%; height:70%;"></div>
-    
-    <div class="cam-controls" style="position:absolute; bottom:40px; z-index:4200;">
-        <button class="btn-action-premium" onclick="closeLiveCamera()" style="background:var(--cs-red)">× Cancel</button>
-        <div class="shutter-cam-btn" onclick="captureLiveSnapshot()" style="transform:none; width:65px; height:65px;"></div>
-        <button class="btn-action-premium" onclick="document.getElementById('fileInput').click()">Gallery</button>
-    </div>
-</div>
-<!-- ==================== END: CAMERA OVERLAY & GUIDE ==================== -->
-    
-<!-- ==================== START: HOME & FILES TABS ==================== -->
-<main id="panel-home" class="view-panel active">
-    <div class="section-title">Recent Workspaces <span>View All</span></div>
-    <div id="recents-list-container"></div>
-</main>
-
-<main id="panel-files" class="view-panel">
-    <div class="section-title">All Engine Logs & Documents</div>
-    <div id="all-files-list-container"></div>
-</main>
-<!-- ==================== END: HOME & FILES TABS ==================== -->
-
-<!-- ==================== START: TOOLS TAB (UPDATED) ==================== -->
-<main id="panel-tools" class="view-panel">
-    <div class="section-title">2026 Advanced AI Services</div>
-    <div class="tools-grid-box">
-        <button class="tool-icon-btn" onclick="triggerDirectConvert('document')">
-            <div class="tool-icon-circle" style="background: #ef4444;">PDF</div>
-            <span>Scan Doc</span>
-        </button>
-        <button class="tool-icon-btn" onclick="triggerDirectConvert('idcard')">
-            <div class="tool-icon-circle" style="background: #10b981;">🪪</div>
-            <span>ID Card</span>
-        </button>
-        <button class="tool-icon-btn" onclick="triggerDirectConvert('edit')">
-            <div class="tool-icon-circle" style="background: #8b5cf6;">✎</div>
-            <span>Live Edit</span>
-        </button>
-    </div>
-</main>
-<!-- ==================== END: TOOLS TAB (UPDATED) ==================== -->
-    <!-- ==================== START: ME TAB ==================== -->
-<main id="panel-me" class="view-panel">
-    <div class="recent-card"><h3>Muneeb AI Pro Enterprise Account [2026]</h3></div>
-</main>
-<!-- ==================== END: ME TAB ==================== -->
-
-<!-- ==================== START: PREMIUM WORKSPACE ==================== -->
-<div id="premiumWorkspace" class="workspace-fullscreen">
-    <div class="cs-header">
-        <div class="cs-logo-text" onclick="closeWorkspace()">✕ Exit Engine</div>
-        <!-- یہاں ورک اسپیس ٹائٹل خودکار اپڈیٹ ہوگا -->
-        <div id="workspaceTitle" style="font-size:0.85rem; color:var(--cs-green); font-weight:bold;">Smart AI Editor</div>
-    </div>
-    
-    <div class="canvas-container-box">
-        <div class="overlay-text-wrapper" id="canvasBaseWrapper">
-            <img id="interactiveCanvasBase" onclick="handleCanvasTap(event)">
-            <div id="editableFieldsContainer"></div>
-        </div>
+    <!-- Global Processing Loader Overlay -->
+    <div id="ai-global-loader" class="ai-loader-container" style="display: none;">
+        <div class="spinner"></div>
+        <p id="loader-text">AI Processing Engine Active...</p>
     </div>
 
-    <div class="filter-strip-box">
-        <div class="filter-thumb active" onclick="applyImageFilter('original', this)">Original</div>
-        <div class="filter-thumb" onclick="applyImageFilter('magicColor', this)">Magic Color AI</div>
-        <div class="filter-thumb" onclick="applyImageFilter('bw', this)">B&W Document</div>
-        <div class="filter-thumb" onclick="applyImageFilter('grayscale', this)">Grayscale</div>
-    </div>
-    
-    <div class="ws-bottom-actions">
-        <button class="btn-action-premium" onclick="processDoc('pdf')">💾 Download PDF</button>
-        <button class="btn-action-premium primary" onclick="shareToWhatsApp()">🚀 WhatsApp Share</button>
-    </div>
-</div>
-<!-- ==================== END: PREMIUM WORKSPACE ==================== -->
-    <!-- ==================== START: NAVIGATION BAR ==================== -->
-<nav class="cs-bottom-nav">
-    <button class="nav-tab active" id="tab-home" onclick="switchTab('home')">Home</button>
-    <button class="nav-tab" id="tab-files" onclick="switchTab('files')">Files</button>
-    <div class="upload-wrapper">
-        <button class="shutter-cam-btn" onclick="openLiveCamera()">+</button>
-        <input type="file" id="fileInput" hidden accept="image/*" onchange="handleFile(this)">
-        <input type="file" id="pdfFileInput" hidden accept="application/pdf" onchange="handlePDFUpload(this)">
-    </div>
-    <button class="nav-tab" id="tab-tools" onclick="switchTab('tools')">Tools</button>
-    <button class="nav-tab" id="tab-me" onclick="switchTab('me')">Me</button>
-</nav>
-<!-- ==================== END: NAVIGATION BAR ==================== -->
+    <!-- Main App Container -->
+    <div class="app-shell">
+        
+        <!-- Top Navigation Bar -->
+        <header class="main-header">
+            <div class="hamburger-menu" onclick="toggleHamburgerMenu(true)">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+            <div class="app-identity">
+                <h1>MS ScanSuite <span class="badge-ai">AI Pro</span></h1>
+            </div>
+            <div class="header-actions">
+                <button class="backup-btn" onclick="triggerDatabaseBackup()" title="Backup Database">📦 Backup</button>
+            </div>
+        </header>
 
-<!-- یہاں آپ کا جاوا اسکرپٹ کا کوڈ آئے گا -->
-    
-<!-- END OF PART 1 -->
-    <script>
-<!-- ==================== START: ENGINE CORE VARIABLES & CONFIG ==================== -->
-<script>
-// گلوبل ویری ایبلز جو پوری ایپ کو ہینڈل کرتے ہیں
-let dbFiles = [];
-let currentMode = 'edit';
-let activeTab = 'home';
-let loadedImgBase64 = null;
-let localStream = null;
-let currentActiveFilter = 'original';
+        <!-- 3-Menu Hamburger Sidebar Drawer -->
+        <nav id="sidebar-drawer" class="sidebar-navigation">
+            <div class="sidebar-header">
+                <h3>Main Menu</h3>
+                <button class="close-sidebar-btn" onclick="toggleHamburgerMenu(false)">✕</button>
+            </div>
+            <ul class="sidebar-links">
+                <li onclick="switchAppTab('dashboard')">📂 My Workspace Storage</li>
+                <li onclick="switchAppTab('advanced-converters')">🔄 PDF / Excel / Word Tools</li>
+                <li onclick="switchAppTab('system-settings')">⚙️ App System & Memory Backup</li>
+            </ul>
+        </nav>
+        <div id="sidebar-overlay" class="drawer-overlay" onclick="toggleHamburgerMenu(false)"></div>
 
-// ٹیب سوئچنگ لاجک (ہوم، فائلز، ٹولز کو ایکٹو کرنے کے لیے)
-function switchTab(tabId) {
-    activeTab = tabId;
-    document.querySelectorAll('.view-panel').forEach(panel => panel.classList.remove('active'));
-    document.querySelectorAll('.nav-tab').forEach(tab => tab.classList.remove('active'));
-    
-    const activePanel = document.getElementById(`panel-${tabId}`);
-    if (activePanel) activePanel.classList.add('active');
-    
-    // نیچے والے مینو بٹن کو ہائی لائٹ کرنا
-    if (tabId === 'home') document.getElementById('tab-home').classList.add('active');
-    if (tabId === 'files') document.getElementById('tab-files').classList.add('active');
-    if (tabId === 'tools') document.getElementById('tab-tools').classList.add('active');
-    if (tabId === 'me') document.getElementById('tab-me').classList.add('active');
-    
-    renderDashboardFiles();
-}
-
-function toggleSidebar(open) {
-    const menu = document.getElementById('sidebarMenu');
-    if (open) menu.classList.add('active');
-    else menu.classList.remove('active');
-}
-
-// ==================== START: APP INITIALIZATION FUNCTION ====================
-window.addEventListener('DOMContentLoaded', () => {
-    const savedImg = localStorage.getItem('cs_active_image');
-    const savedFields = localStorage.getItem('cs_active_fields');
-    const savedMode = localStorage.getItem('cs_current_mode');
-    const savedDb = localStorage.getItem('cs_app_db_files');
-    
-    if (savedDb) dbFiles = JSON.parse(savedDb);
-    if (savedMode) currentMode = savedMode;
-    if (savedImg) {
-        loadedImgBase64 = savedImg;
-        openWorkspace(savedImg, false);
-        if (savedFields) {
-            JSON.parse(savedFields).forEach(data => createSavedField(data));
-            calculateReceivedTotal();
-        }
-    }
-    renderDashboardFiles();
-});
-// ==================== END: APP INITIALIZATION FUNCTION ====================
-
-// ==================== START: DIRECT CAMERA MODE TRIGGER ====================
-function triggerDirectConvert(mode) {
-    currentMode = mode;
-    openLiveCamera();
-}
-// ==================== END: DIRECT CAMERA MODE TRIGGER ====================
-
-// ==================== START: OPEN LIVE CAMERA & OVERLAY GUIDE ====================
-async function openLiveCamera() {
-    const overlay = document.getElementById('cameraOverlay');
-    const video = document.getElementById('webcamStream');
-    const frameGuide = document.getElementById('cameraFrameGuide');
-    
-    overlay.style.display = 'flex';
-    
-    if (frameGuide) {
-        if (currentMode === 'idcard') {
-            frameGuide.style.border = "3px dashed #0bb376";
-            frameGuide.style.width = "85%";
-            frameGuide.style.height = "220px";
-        } else {
-            frameGuide.style.border = "2px dashed #fff";
-            frameGuide.style.width = "90%";
-            frameGuide.style.height = "70%";
-        }
-    }
-    
-    try {
-        localStream = await navigator.mediaDevices.getUserMedia({
-            video: { facingMode: "environment", width: { ideal: 1920 }, height: { ideal: 1080 } },
-            audio: false
-        });
-        video.srcObject = localStream;
-    } catch (err) {
-        alert("Camera access failed. Falling back to file upload.");
-        closeLiveCamera();
-        document.getElementById('fileInput').click();
-    }
-}
-// ==================== END: OPEN LIVE CAMERA & OVERLAY GUIDE ====================
-
-// ==================== START: CAPTURE SNAPSHOT FUNCTION ====================
-function captureLiveSnapshot() {
-    const video = document.getElementById('webcamStream');
-    const canvas = document.createElement('canvas');
-    canvas.width = video.videoWidth || 1280;
-    canvas.height = video.videoHeight || 720;
-    
-    const ctx = canvas.getContext('2d');
-    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-    
-    loadedImgBase64 = canvas.toDataURL('image/jpeg');
-    closeLiveCamera();
-    openWorkspace(loadedImgBase64, true);
-}
-// ==================== END: CAPTURE SNAPSHOT FUNCTION ====================
-
-// ==================== START: CLOSE LIVE CAMERA FUNCTION ====================
-function closeLiveCamera() {
-    const overlay = document.getElementById('cameraOverlay');
-    overlay.style.display = 'none';
-    if (localStream) {
-        localStream.getTracks().forEach(track => track.stop());
-        localStream = null;
-    }
-}
-// ==================== END: CLOSE LIVE CAMERA FUNCTION ====================
-       // ==================== START: HANDLE CANVAS TAP (AUTO DETECTION) ====================
-function handleCanvasTap(event) {
-    const imgBase = document.getElementById('interactiveCanvasBase');
-    const rect = imgBase.getBoundingClientRect();
-    
-    const xCoord = event.clientX - rect.left;
-    const yCoord = event.clientY - rect.top;
-    
-    const pctX = xCoord / rect.width;
-    const pctY = yCoord / rect.height;
-    
-    const baseSize = Math.max(10, Math.min(12, Math.round(rect.width * 0.017)));
-    
-    let colType = 'normal';
-    if (pctX >= 0.83) colType = 'received';
-    else if (pctX >= 0.68 && pctX < 0.83) colType = 'return';
-
-    const fieldData = {
-        id: 'f_' + Date.now(),
-        pctX: pctX,
-        pctY: pctY,
-        fontSize: baseSize,
-        type: colType,
-        value: ''
-    };
-
-    createSavedField(fieldData);
-    saveFieldsToMemory();
-}
-// ==================== END: HANDLE CANVAS TAP (AUTO DETECTION) ====================
-
-// ==================== START: CREATE SAVED FIELD (STYLE MATCHING) ====================
-function createSavedField(data) {
-    const editableContainer = document.getElementById('editableFieldsContainer');
-    const imgBase = document.getElementById('interactiveCanvasBase');
-    const rect = imgBase.getBoundingClientRect();
-
-    const inputNode = document.createElement('input');
-    inputNode.type = "text";
-    inputNode.id = data.id;
-    inputNode.className = "live-tap-input-field";
-    if (data.type === 'received') inputNode.classList.add('received-amount-field');
-    if (data.type === 'return') inputNode.classList.add('return-amount-field');
-    
-    inputNode.value = data.value;
-    
-    inputNode.style.position = "absolute";
-    inputNode.style.left = `${(data.pctX * rect.width) - 52}px`; 
-    inputNode.style.top = `${(data.pctY * rect.height) - (data.fontSize / 2)}px`;
-    inputNode.style.width = "72px"; 
-    inputNode.style.fontSize = `${data.fontSize}px`;
-    inputNode.style.fontFamily = "Arial, Helvetica, sans-serif";
-    inputNode.style.background = "transparent";
-    inputNode.style.border = "none";
-    inputNode.style.outline = "none";
-    inputNode.style.textAlign = "right";
-    inputNode.style.color = "#000000";
-    inputNode.style.fontWeight = "500";
-
-    inputNode.dataset.percentX = data.pctX;
-    inputNode.dataset.percentY = data.pctY;
-    inputNode.dataset.fontSizePt = data.fontSize;
-    inputNode.dataset.type = data.type;
-    inputNode.dataset.id = data.id;
-
-    inputNode.oninput = function() {
-        if (data.type === 'received') calculateReceivedTotal();
-        saveFieldsToMemory();
-    };
-
-    inputNode.onkeydown = function(e) {
-        if (e.key === "Enter") {
-            e.preventDefault();
-            const allInputs = Array.from(document.querySelectorAll('.live-tap-input-field'));
-            const currentIndex = allInputs.indexOf(inputNode);
+        <!-- MAIN WORKSPACE VIEWS PANELS -->
+        <main class="workspace-viewport">
             
-            if (currentIndex > -1 && currentIndex + 1 < allInputs.length) {
-                allInputs[currentIndex + 1].focus();
-                allInputs[currentIndex + 1].select();
-            } else {
-                inputNode.blur();
-            }
-        }
-    };
-
-    inputNode.onclick = function(e) { e.stopPropagation(); };
-    editableContainer.appendChild(inputNode);
-    if (!data.value) setTimeout(() => inputNode.focus(), 50);
-}
-// ==================== END: CREATE SAVED FIELD (STYLE MATCHING) ====================
-
-function saveFieldsToMemory() {
-    const allInputs = document.querySelectorAll('.live-tap-input-field');
-    const fieldsArray = [];
-    allInputs.forEach(input => {
-        fieldsArray.push({
-            id: input.dataset.id,
-            pctX: parseFloat(input.dataset.percentX),
-            pctY: parseFloat(input.dataset.percentY),
-            fontSize: parseFloat(input.dataset.fontSizePt),
-            type: input.dataset.type,
-            value: input.value
-        });
-    });
-    localStorage.setItem('cs_active_fields', JSON.stringify(fieldsArray));
-}
-
-function calculateReceivedTotal() {
-    const receivedFields = document.querySelectorAll('.received-amount-field');
-    let totalSum = 0;
-    receivedFields.forEach(field => {
-        const cleanValue = field.value.replace(/,/g, '').trim();
-        const val = parseFloat(cleanValue);
-        if (!isNaN(val)) totalSum += val;
-    });
-    window.lastCalculatedTotal = totalSum;
-    
-    let totalIndicator = document.getElementById('cs-live-total-bar');
-    if (!totalIndicator) {
-        totalIndicator = document.createElement('div');
-        totalIndicator.id = 'cs-live-total-bar';
-        totalIndicator.style = "position:fixed; bottom:140px; right:20px; background:#0bb376; color:#fff; padding:8px 15px; border-radius:30px; font-weight:bold; font-size:13px; z-index:3000; box-shadow:0 4px 10px rgba(0,0,0,0.3); font-family:Arial;";
-        document.body.appendChild(totalIndicator);
-    }
-    totalIndicator.innerText = "Total Received: Rs " + totalSum.toLocaleString();
-}
-
-function applyImageFilter(filterType, element) {
-    currentActiveFilter = filterType;
-    const imgBase = document.getElementById('interactiveCanvasBase');
-    
-    document.querySelectorAll('.filter-thumb').forEach(el => el.classList.remove('active'));
-    if(element) element.classList.add('active');
-
-    if(filterType === 'magicColor') imgBase.style.filter = "contrast(1.2) brightness(1.1) saturate(1.3)";
-    else if(filterType === 'bw') imgBase.style.filter = "contrast(2.5) brightness(1.05) grayscale(1)";
-    else if(filterType === 'grayscale') imgBase.style.filter = "grayscale(1) contrast(1.1)";
-    else imgBase.style.filter = "none";
-}
-
-async function processDoc(typeFormat) {
-    if (!loadedImgBase64) return;
-    document.getElementById('globalLoader').style.display = 'flex';
-    
-    const { jsPDF } = window.jspdf;
-    const pdf = new jsPDF('p', 'mm', 'a4');
-    
-    const imgBase = document.getElementById('interactiveCanvasBase');
-    const tempCanvas = document.createElement('canvas');
-    tempCanvas.width = imgBase.naturalWidth;
-    tempCanvas.height = imgBase.naturalHeight;
-    const ctx = tempCanvas.getContext('2d');
-    
-    if(currentActiveFilter === 'magicColor') ctx.filter = "contrast(1.2) brightness(1.1) saturate(1.3)";
-    else if(currentActiveFilter === 'bw') ctx.filter = "contrast(2.5) brightness(1.05) grayscale(1)";
-    else if(currentActiveFilter === 'grayscale') ctx.filter = "grayscale(1) contrast(1.1)";
-    
-    ctx.drawImage(imgBase, 0, 0, tempCanvas.width, tempCanvas.height);
-    const processedImgBase64 = tempCanvas.toDataURL('image/jpeg');
-
-    pdf.addImage(processedImgBase64, 'JPEG', 0, 0, 210, 297);
-
-    document.querySelectorAll('.live-tap-input-field').forEach(input => {
-        const px = parseFloat(input.dataset.percentX) || 0;
-        const py = parseFloat(input.dataset.percentY) || 0;
-        const textVal = input.value;
-        const sizePt = parseFloat(input.dataset.fontSizePt) || 11;
-
-        if (textVal) {
-            pdf.setFont("Helvetica", "normal");
-            pdf.setFontSize(sizePt * 0.82);
-            pdf.setTextColor(30, 30, 30);
-            pdf.text(textVal, px * 210, py * 297, { align: "right" });
-        }
-    });
-
-    if (window.lastCalculatedTotal && window.lastCalculatedTotal > 0) {
-        pdf.setFont("Helvetica", "bold");
-        pdf.setFontSize(11);
-        pdf.setTextColor(0, 0, 0);
-        pdf.text(window.lastCalculatedTotal.toLocaleString() + ".00", 195, 185, { align: "right" });
-    }
-
-    const outputBlob = pdf.output('blob');
-    const generatedName = (currentMode === 'idcard' ? "ID_Card_" : "Scanned_Doc_") + Math.floor(Math.random() * 89999 + 10000) + ".pdf";
-
-    const localRecord = {
-        id: Date.now(),
-        name: generatedName,
-        date: new Date().toLocaleDateString(),
-        type: "pdf",
-        blobUrl: URL.createObjectURL(outputBlob)
-    };
-
-    dbFiles.unshift(localRecord);
-    localStorage.setItem('cs_app_db_files', JSON.stringify(dbFiles));
-    
-    localStorage.removeItem('cs_active_image');
-    localStorage.removeItem('cs_active_fields');
-    let totalIndicator = document.getElementById('cs-live-total-bar');
-    if (totalIndicator) totalIndicator.remove();
-    
-    closeWorkspace();
-    switchTab('home');
-
-    const dlLink = document.createElement('a');
-    dlLink.href = localRecord.blobUrl;
-    dlLink.download = localRecord.name;
-    dlLink.click();
-    
-    document.getElementById('globalLoader').style.display = 'none';
-}
-
-function deleteDocRecord(id, event) {
-    event.stopPropagation();
-    if(confirm("Are you sure you want to delete this document from App Memory?")) {
-        dbFiles = dbFiles.filter(item => item.id !== id);
-        localStorage.setItem('cs_app_db_files', JSON.stringify(dbFiles));
-        renderDashboardFiles();
-    }
-}
-
-function renderDashboardFiles() {
-    const homeList = document.getElementById('recents-list-container');
-    const filesList = document.getElementById('all-files-list-container');
-    let elementsHtml = "";
-    
-    if (dbFiles.length === 0) {
-        elementsHtml = `<p style="color:var(--text-muted); text-align:center; padding:30px; font-size:0.85rem;">No permanent documents found. Scan or Upload to save in app memory.</p>`;
-        if (homeList && activeTab === 'home') homeList.innerHTML = elementsHtml;
-        if (filesList && activeTab === 'files') filesList.innerHTML = elementsHtml;
-        return;
-    }
-
-    dbFiles.forEach(doc => {
-        elementsHtml += `
-            <div class="recent-card" style="display:flex; align-items:center; justify-content:space-between; background:#222531; margin-bottom:10px; padding:10px; border-radius:10px; width:100%;">
-                <div class="doc-icon-box pdf-mode" style="background:#ff4d4d; color:#fff; padding:5px 10px; border-radius:5px; font-weight:bold; font-size:0.8rem;">PDF</div>
-                <div class="doc-meta" onclick="window.open('${doc.blobUrl}')" style="flex-grow:1; margin-left:10px; cursor:pointer;">
-                    <div class="doc-title" style="color:#fff; font-size:0.9rem; font-weight:600;">${doc.name}</div>
-                    <div class="doc-date" style="color:#858585; font-size:0.75rem;">${doc.date} • Permanent</div>
+            <!-- PANEL 1: DASHBOARD (Workspace Memory & Files) -->
+            <section id="view-dashboard" class="view-panel active">
+                <div class="welcome-banner">
+                    <h2>Active Scanner Workspace</h2>
+                    <p>Files stay secured in your browser's persistent sandbox memory.</p>
                 </div>
-                <div class="delete-btn-zone" onclick="deleteDocRecord(${doc.id}, event)" style="color:#ff4d4d; font-size:1.2rem; padding:10px; cursor:pointer;">🗑️</div>
-            </div>`;
-    });
+                
+                <!-- Quick Trigger Cards -->
+                <div class="scanner-trigger-grid">
+                    <div class="trigger-card doc-mode" onclick="initiateCameraScan('document')">
+                        <div class="card-icon">📄</div>
+                        <h4>Scan Document</h4>
+                    </div>
+                    <div class="trigger-card card-mode" onclick="initiateCameraScan('idcard')">
+                        <div class="card-icon">🪪</div>
+                        <h4>ID Card Scanner</h4>
+                    </div>
+                    <div class="trigger-card edit-mode" onclick="triggerDirectImageUpload()">
+                        <div class="card-icon">✍️</div>
+                        <h4>Smart Editor Image</h4>
+                    </div>
+                </div>
 
-    if (homeList && activeTab === 'home') homeList.innerHTML = elementsHtml;
-    if (filesList && activeTab === 'files') filesList.innerHTML = elementsHtml;
-}
+                <!-- Live Memory Files Counter -->
+                <div class="storage-indicator-bar">
+                    <span>Local Database Storage: <strong id="db-file-count">0</strong> Saved Records</span>
+                </div>
 
-function adjustWorkspaceUIForMode() {
-    const titleNode = document.getElementById('workspaceTitle');
-    if (!titleNode) return;
-    if (currentMode === 'idcard') titleNode.innerText = "🪪 ID Card Scanner Mode";
-    else if (currentMode === 'document') titleNode.innerText = "📄 Document Scanner Mode";
-    else titleNode.innerText = "✍️ Smart AI Editor Mode";
-}
+                <!-- Permanent Active Screen Records -->
+                <div class="recents-section">
+                    <h3>Workspace Permanent Screen</h3>
+                    <div id="workspace-permanent-list" class="files-list-grid">
+                        <!-- Documents will stay rendered here directly from localstorage -->
+                    </div>
+                </div>
+            </section>
 
-function openWorkspace(imageSrc, isNew = true) {
-    const workspace = document.getElementById('premiumWorkspace');
-    const imgBase = document.getElementById('interactiveCanvasBase');
-    const editableContainer = document.getElementById('editableFieldsContainer');
-    
-    if (isNew) {
-        editableContainer.innerHTML = "";
-        localStorage.setItem('cs_active_image', imageSrc);
-        localStorage.removeItem('cs_active_fields');
-        localStorage.setItem('cs_current_mode', currentMode);
-    }
-    
-    imgBase.src = imageSrc;
-    workspace.classList.add('active');
-    adjustWorkspaceUIForMode();
-}
+            <!-- PANEL 2: ADVANCED CONVERTERS (PDF To Excel, Word etc.) -->
+            <section id="view-advanced-converters" class="view-panel">
+                <div class="section-title">
+                    <h2>Advanced Multi-Format Converters</h2>
+                    <p>Convert documents locally with 0% data leakage risk.</p>
+                </div>
 
-function closeWorkspace() {
-    document.getElementById('premiumWorkspace').classList.remove('active');
-    localStorage.removeItem('cs_active_image');
-    localStorage.removeItem('cs_active_fields');
-    loadedImgBase64 = null;
-}
+                <div class="converters-wrapper-grid">
+                    <!-- Excel to PDF -->
+                    <div class="converter-box">
+                        <h4>Excel Sheet (.xlsx) ➔ PDF Document</h4>
+                        <input type="file" id="excel-to-pdf-input" accept=".xlsx" onchange="convertExcelToPdfEngine(this)">
+                    </div>
 
-function handleFile(input) {
-    if (input.files && input.files[0]) {
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            loadedImgBase64 = e.target.result;
-            openWorkspace(loadedImgBase64, true);
-        };
-        reader.readAsDataURL(input.files[0]);
-    }
-}
-        // ==================== START: WHATSAPP SHARE ENGINE ====================
-function shareToWhatsApp() {
-    if (!loadedImgBase64) {
-        alert("No active document to share!");
-        return;
-    }
-    
-    // واٹس ایپ پر ٹیکسٹ میسج بھیجنے کے لیے لنک بنانا
-    const messageText = encodeURIComponent("Salam, I am sharing a scanned document via MS CamScanner AI Pro [2026].");
-    const whatsappUrl = `https://api.whatsapp.com/send?text=${messageText}`;
-    
-    // واٹس ایپ اوپن کرنا
-    window.open(whatsappUrl, '_blank');
-}
-// ==================== END: WHATSAPP SHARE ENGINE ====================
+                    <!-- PDF to Excel / Text Data -->
+                    <div class="converter-box">
+                        <h4>PDF Document ➔ Plain Text / Data</h4>
+                        <input type="file" id="pdf-to-text-input" accept=".pdf" onchange="convertPdfToTextEngine(this)">
+                    </div>
 
-// ==================== START: REMOTE PDF UPLOAD FALLBACKS ====================
-function triggerPDFUpload() {
-    document.getElementById('pdfFileInput').click();
-}
+                    <!-- Word Docx to PDF -->
+                    <div class="converter-box">
+                        <h4>Word Document (.docx) ➔ PDF Format</h4>
+                        <input type="file" id="word-to-pdf-input" accept=".docx" onchange="convertWordToPdfEngine(this)">
+                    </div>
+                </div>
+            </section>
 
-function handlePDFUpload(input) {
-    if (input.files && input.files[0]) {
-        alert("PDF Engine Initialized. Extracting pages to workspace...");
-        // یہاں ہم عارضی طور پر لوڈر دکھا کر فرنٹ اینڈ پر ہینڈل کر رہے ہیں
-        document.getElementById('globalLoader').style.display = 'flex';
-        
-        setTimeout(() => {
-            document.getElementById('globalLoader').style.display = 'none';
-            alert("For advanced PDF layout edits, please upload an Image/Snapshot directly in this version.");
-        }, 1500);
-    }
-}
-// ==================== END: REMOTE PDF UPLOAD FALLBACKS ====================
-        
-</script>
-<!-- ==================== END: ALL LOGICS COMPLETED ==================== -->
-    
+            <!-- PANEL 3: SYSTEM SETTINGS & MANUAL BACKUP -->
+            <section id="view-system-settings" class="view-panel">
+                <div class="section-title">
+                    <h2>System Control & Database Backup</h2>
+                </div>
+                <div class="settings-card">
+                    <h4>Export Complete Database File</h4>
+                    <p>Download all files currently present on the workspace screen into a single physical backup file.</p>
+                    <button class="btn-action green-btn" onclick="triggerDatabaseBackup()">Export Database Backup (.json)</button>
+                </div>
+                <div class="settings-card urgent-card">
+                    <h4>Import External Database Backup</h4>
+                    <input type="file" id="import-db-input" accept=".json" onchange="importDatabaseBackupEngine(this)" style="margin-top:10px;">
+                </div>
+            </section>
+
+        </main>
+
+        <!-- PERSISTENT APP WORKSPACE EDITOR OVERLAY -->
+        <div id="ai-premium-editor-overlay" class="editor-modal-overlay">
+            <div class="editor-top-bar">
+                <h3 id="editor-mode-title">AI Editing Sandbox</h3>
+                <button class="close-editor-btn" onclick="exitWorkspaceEditor()">✕ Close</button>
+            </div>
+            
+            <!-- Filters Engine Utility -->
+            <div class="editor-filter-strip">
+                <button class="filter-chip active" id="f-orig" onclick="applyWorkspaceFilter('original')">Original</button>
+                <button class="filter-chip" id="f-magic" onclick="applyWorkspaceFilter('magicColor')">Magic Enhancement</button>
+                <button class="filter-chip" id="f-bw" onclick="applyWorkspaceFilter('bw')">B&W Document</button>
+                <button class="filter-chip" id="f-gray" onclick="applyWorkspaceFilter('grayscale')">Grayscale</button>
+            </div>
+
+            <!-- Canvas Touch Layer Workspace -->
+            <div class="interactive-canvas-frame" onclick="handleDocumentCanvasTap(event)">
+                <img id="workspace-source-img" alt="Source Canvas Image Matrix">
+                <!-- Overlay Input Fields Generated Dynamically -->
+                <div id="dynamic-fields-injection-layer"></div>
+            </div>
+
+            <!-- Footer Output Action Anchors -->
+            <div class="editor-bottom-bar">
+                <button class="btn-action whatsapp-btn" onclick="executeWhatsAppShare()">📲 WhatsApp Share</button>
+                <button class="btn-action compile-btn" onclick="compileAndSaveDocument()">💾 Compile & Save Document</button>
+            </div>
+        </div>
+
+        <!-- CAMERA CAPTURE LAYER INTERACTIVE OVERLAY -->
+        <div id="camera-capture-overlay" class="camera-system-overlay">
+            <div class="camera-top-control">
+                <h3 id="camera-view-mode-indicator">Camera Viewfinder</h3>
+                <button class="close-camera-btn" onclick="shutdownLiveCameraView()">✕ Close</button>
+            </div>
+            <div class="viewfinder-container">
+                <video id="hardware-webcam-stream" autoplay playsinline></video>
+                <div id="overlay-frame-guide-box"></div>
+            </div>
+            <div class="camera-action-dock">
+                <button class="capture-trigger-shutter" onclick="captureLiveCameraFrame()"></button>
+            </div>
+        </div>
+
+        <!-- HIDDEN FILE INPUT PICKERS FOR DIRECT TRIGGERS -->
+        <input type="file" id="hidden-image-picker" accept="image/*" style="display: none;" onchange="processImportedImageFile(this)">
+
+        <!-- Bottom Tabbed Navigation Controls -->
+        <footer class="bottom-tab-navigation">
+            <button id="nav-btn-dashboard" class="tab-btn active" onclick="switchAppTab('dashboard')">
+                <span class="tab-icon">🏠</span><span class="tab-label">Workspace</span>
+            </button>
+            <button id="nav-btn-advanced-converters" class="tab-btn" onclick="switchAppTab('advanced-converters')">
+                <span class="tab-icon">🔄</span><span class="tab-label">Tools</span>
+            </button>
+            <button id="nav-btn-system-settings" class="tab-btn" onclick="switchAppTab('system-settings')">
+                <span class="tab-icon">⚙️</span><span class="tab-label">Settings</span>
+            </button>
+        </footer>
+
+    </div>
+
+    <!-- Core Javascript Initialization Connector Link -->
+    <script src="app.js"></script>
+</body>
+</html>
+
