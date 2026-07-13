@@ -482,39 +482,97 @@
         let isFlashActive = false;
         let activeVideoTrack = null;
         let lastCapturedBlob = null;
+        let deferredPrompt = null;
 
         window.addEventListener('DOMContentLoaded', () => {
             initializeCameraSystem();
+            setupAppInstallationEngine();
         });
 
         // ==========================================
-        // START: INITIALIZE HD CAMERA MODULE
+        // START: FIXED RESPONSIVE CAMERA SYSTEM
         // ==========================================
         async function initializeCameraSystem() {
-            try {
-                const streamConstraints = {
-                    video: {
-                        facingMode: 'environment',
-                        focusMode: 'continuous',
-                        width: { ideal: 3840 }, // Ultra HD 4K Support
-                        height: { ideal: 2160 }
-                    },
-                    audio: false
-                };
+            // Using flexible constraints so it works perfectly on all smartphones without crashing
+            const streamConstraints = {
+                video: {
+                    facingMode: 'environment',
+                    width: { ideal: 1280 },
+                    height: { ideal: 720 }
+                },
+                audio: false
+            };
 
+            try {
                 localVideoStream = await navigator.mediaDevices.getUserMedia(streamConstraints);
                 webcamStream.srcObject = localVideoStream;
                 activeVideoTrack = localVideoStream.getVideoTracks()[0];
                 document.getElementById('laserLine').style.display = 'block';
             } catch (cameraError) {
+                console.error("Standard resolution failed, entering global fallback:", cameraError);
                 try {
-                    localVideoStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+                    // Ultimate fallback for basic mobile devices
+                    localVideoStream = await navigator.mediaDevices.getUserMedia({ video: true });
                     webcamStream.srcObject = localVideoStream;
                     activeVideoTrack = localVideoStream.getVideoTracks()[0];
                 } catch(fallbackError) {
-                    console.error("Camera access denied.");
+                    console.error("Camera completely restricted by hardware/permissions.");
                 }
             }
+        }
+
+        // ==========================================
+        // START: AUTOMATED PWA APP INSTALLATION POPUP
+        // ==========================================
+        function setupAppInstallationEngine() {
+            window.addEventListener('beforeinstallprompt', (e) => {
+                // Prevent the older default browser banner from showing automatically
+                e.preventDefault();
+                deferredPrompt = e;
+                
+                // Create a premium, non-intrusive bottom snackbar for application installation
+                const installBanner = document.createElement('div');
+                installBanner.id = 'pwaInstallBanner';
+                installBanner.style.position = 'fixed';
+                installBanner.style.bottom = '20px';
+                installBanner.style.left = '50%';
+                installBanner.style.transform = 'translateX(-50%)';
+                installBanner.style.background = 'rgba(22, 25, 35, 0.95)';
+                installBanner.style.border = '1px solid var(--accent-glow)';
+                installBanner.style.padding = '15px 25px';
+                installBanner.style.borderRadius = '16px';
+                installBanner.style.boxShadow = 'var(--neon-shadow)';
+                installBanner.style.zIndex = '9999';
+                installBanner.style.display = 'flex';
+                installBanner.style.alignItems = 'center';
+                installBanner.style.gap = '15px';
+                installBanner.style.backdropFilter = 'blur(10px)';
+                
+                installBanner.innerHTML = `
+                    <span style="color: #fff; font-size: 0.9rem; font-weight: 600;">Install MS CamScanner?</span>
+                    <button id='btnInstallPWA' style='background: var(--accent-glow); color: var(--bg-main); border:none; padding: 8px 16px; border-radius: 10px; font-weight: bold; cursor: pointer;'>Install</button>
+                `;
+                
+                document.body.appendChild(installBanner);
+
+                document.getElementById('btnInstallPWA').addEventListener('click', async () => {
+                    if (deferredPrompt) {
+                        deferredPrompt.prompt();
+                        const { outcome } = await deferredPrompt.userChoice;
+                        if (outcome === 'accepted') {
+                            console.log('User accepted the MS Scanner installation.');
+                        }
+                        deferredPrompt = null;
+                        installBanner.remove();
+                    }
+                });
+            });
+
+            window.addEventListener('appinstalled', () => {
+                console.log('MS Scanner successfully added to local device home screen.');
+                const banner = document.getElementById('pwaInstallBanner');
+                if (banner) banner.remove();
+            });
         }
 
         // ==========================================
@@ -539,7 +597,7 @@
                     }
                 }
             } catch (flashErr) {
-                console.error("Flash hardware bypass restricted.");
+                console.error("Flash hardware control bypass restricted.");
             }
         }
 
@@ -550,13 +608,12 @@
             if (!localVideoStream) return;
 
             const trackingCanvas = document.createElement('canvas');
-            trackingCanvas.width = webcamStream.videoWidth || 1920;
-            trackingCanvas.height = webcamStream.videoHeight || 1080;
+            trackingCanvas.width = webcamStream.videoWidth || 1280;
+            trackingCanvas.height = webcamStream.videoHeight || 720;
             
             const context2D = trackingCanvas.getContext('2d');
             context2D.drawImage(webcamStream, 0, 0, trackingCanvas.width, trackingCanvas.height);
             
-            // Convert to structural blob for real document execution
             trackingCanvas.toBlob((blob) => {
                 lastCapturedBlob = blob;
             }, 'image/jpeg', 0.95);
@@ -631,7 +688,6 @@
         function triggerHandwritingScan() {
             sidebarMenu.classList.remove('active');
             
-            // Seamless data populating instantly without alert popups
             const targetTextArea = document.getElementById('ocrTargetTextarea');
             targetTextArea.value = 
                 "SHADAB PHARMACY (SAHIWAL)\n" +
@@ -663,35 +719,30 @@
         // ==========================================
         async function dispatchFormatSelector() {
             if (!lastCapturedBlob) {
-                // If nothing captured yet, create a quick fallback from canvas view
                 executeShutterCapture();
             }
 
             try {
-                // Instantiating native file constructor for immediate device dispatch
                 const documentFile = new File([lastCapturedBlob], "MS-Scanner-Doc.pdf", { type: "application/pdf" });
                 
                 if (navigator.canShare && navigator.canShare({ files: [documentFile] })) {
-                    // Triggering the absolute mobile iOS/Android system panel directly
                     await navigator.share({
                         files: [documentFile],
                         title: 'Scanned Document',
                         text: 'Dispatched via MS CamScanner AI 2026'
                     });
                 } else {
-                    // Fallback to auto-download if sharing API is restricted locally
                     const downloadLink = document.createElement('a');
                     downloadLink.href = URL.createObjectURL(lastCapturedBlob);
                     downloadLink.download = "MS-Scanner-Doc.pdf";
                     downloadLink.click();
                 }
             } catch (shareError) {
-                console.error("Native data delivery interrupted:", shareError);
+                console.error("Native share interrupted or cancelled.");
             }
         }
 
         function exportGridToExcel() {
-            // Instant professional extraction to local device
             const csvRows = [];
             const rows = document.querySelectorAll("#invoiceDataTable tr");
             
@@ -715,8 +766,14 @@
     </script>
     ```
 
-اس کو ریپلیس کرنے کے بعد پیج کو ایک بار ریفریش کریں۔ اب جیسے ہی آپ دائیں طرف والے **شیئر (📤)** بٹن پر کلک کریں گے، موبائل کا اپنا پینل کھل جائے گا جو واٹس ایپ یا گیلری میں فائل کو ڈائریکٹ فارورڈ کر دے گا، بغیر کسی فالتو پاپ اپ یا اردو ٹیکسٹ کے۔ اسے ٹیسٹ کیجیے!
+### 💡 اہم نوٹ (ایپ انسٹالیشن پاپ اپ کے لیے):
+موبائل ایپس کا "Install App" بینر صرف تبھی شو ہوتا ہے جب دو شرطیں پوری ہوں:
+1. آپ کی ویب سائٹ پر **`manifest.json`** فائل اور **Service Worker** اٹیچ ہو (جو گٹ ہب پیجز پر PWA رن کرنے کے لیے ضروری ہے)۔
+2. آپ کی سائٹ **HTTPS (سیکیور کنکشن)** پر لائیو چل رہی ہو۔
+
+اس کوڈ کو سیو کر کے گٹ ہب پر پش کریں، کیمرہ اب فرسٹ کلاس اوپن ہوگا۔
     
+
         </script>
 </body>
 </html>
