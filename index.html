@@ -621,43 +621,74 @@
     function closeWorkspace() {
         document.getElementById('premiumWorkspace').classList.remove('active');
     }
+function handleCanvasTap(event) {
+    const imgBase = document.getElementById('interactiveCanvasBase');
+    const editableContainer = document.getElementById('editableFieldsContainer');
+    const rect = imgBase.getBoundingClientRect();
+    
+    const xCoord = event.clientX - rect.left;
+    const yCoord = event.clientY - rect.top;
+    
+    const estimatedFontSize = Math.max(11, Math.min(14, Math.round(rect.width * 0.02)));
+    
+    const inputNode = document.createElement('input');
+    inputNode.type = "text";
+    inputNode.className = "live-tap-input-field";
+    inputNode.value = ""; 
+    
+    inputNode.style.left = `${xCoord - 60}px`; 
+    inputNode.style.top = `${yCoord - (estimatedFontSize / 2)}px`;
+    inputNode.style.width = "80px"; 
+    inputNode.style.fontSize = `${estimatedFontSize}px`;
+    
+    inputNode.dataset.percentX = xCoord / rect.width;
+    inputNode.dataset.percentY = yCoord / rect.height;
+    inputNode.dataset.fontSizePt = estimatedFontSize;
 
-    function handleCanvasTap(event) {
-        const imgBase = document.getElementById('interactiveCanvasBase');
-        const editableContainer = document.getElementById('editableFieldsContainer');
-        const rect = imgBase.getBoundingClientRect();
-        
-        const xCoord = event.clientX - rect.left;
-        const yCoord = event.clientY - rect.top;
-        
-        // 2026 Smart Typography Extraction: Analyze coordinates to mimic background font
-        // Matches size based on viewport scaling and standard professional forms
-        const estimatedFontSize = Math.max(12, Math.min(18, Math.round(rect.width * 0.022)));
-        
-        const inputNode = document.createElement('input');
-        inputNode.type = "text";
-        inputNode.className = "live-tap-input-field";
-        inputNode.value = "Tap & Write...";
-        
-        // Match exact style of existing document typography
-        inputNode.style.left = `${xCoord}px`;
-        inputNode.style.top = `${yCoord}px`;
-        inputNode.style.fontSize = `${estimatedFontSize}px`;
-        inputNode.style.fontWeight = "600";
-        inputNode.style.fontFamily = "Courier New, monospace"; 
-        
-        inputNode.dataset.percentX = xCoord / rect.width;
-        inputNode.dataset.percentY = yCoord / rect.height;
-        inputNode.dataset.fontSizePt = estimatedFontSize;
-
-        inputNode.onclick = function(e) {
-            e.stopPropagation();
-            inputNode.select();
-        };
-
-        editableContainer.appendChild(inputNode);
-        setTimeout(() => inputNode.focus(), 60);
+    // چیک کریں اگر ٹیپ دائیں طرف آخری کالم (Received) کے پاس ہوا ہے
+    if (xCoord > (rect.width * 0.8)) {
+        inputNode.classList.add('received-amount-field');
+        inputNode.oninput = function() { calculateReceivedTotal(); };
     }
+
+    // ENTER KEY NAVIGATOR: اینٹر دباتے ہی اگلے ان پٹ پر خودکار جمپ
+    inputNode.onkeydown = function(e) {
+        if (e.key === "Enter") {
+            e.preventDefault();
+            const allInputs = Array.from(document.querySelectorAll('.live-tap-input-field'));
+            const currentIndex = allInputs.indexOf(inputNode);
+            
+            if (currentIndex > -1 && currentIndex + 1 < allInputs.length) {
+                allInputs[currentIndex + 1].focus();
+                allInputs[currentIndex + 1].select();
+            } else {
+                inputNode.blur();
+                calculateReceivedTotal();
+            }
+        }
+    };
+
+    inputNode.onclick = function(e) {
+        e.stopPropagation();
+    };
+
+    editableContainer.appendChild(inputNode);
+    setTimeout(() => inputNode.focus(), 60);
+}
+
+// لائیو کیلکولیٹر انجن
+function calculateReceivedTotal() {
+    const receivedFields = document.querySelectorAll('.received-amount-field');
+    let totalSum = 0;
+    receivedFields.forEach(field => {
+        const cleanValue = field.value.replace(/,/g, '').trim();
+        const val = parseFloat(cleanValue);
+        if (!isNaN(val)) totalSum += val;
+    });
+    window.lastCalculatedTotal = totalSum;
+    console.log("Current Received Total: ", totalSum);
+}
+        
 
     // 6. GENUINE COMPILATION & EXPORT ENGINE (PDF / EXCEL DOWNLOAD)
     async function processDoc(typeFormat) {
@@ -684,7 +715,16 @@
         const processedImgBase64 = tempCanvas.toDataURL('image/jpeg');
 
         pdf.addImage(processedImgBase64, 'JPEG', 0, 0, pdfWidth, pdfHeight);
-
+        // اگر کوئی Received رقم لکھی گئی ہے، تو اس کا گرینڈ ٹوٹل شیٹ پر نیچے پرنٹ کریں
+        if (window.lastCalculatedTotal && window.lastCalculatedTotal > 0) {
+            pdf.setFont("Courier", "bold");
+            pdf.setFontSize(12);
+            pdf.setTextColor(11, 179, 118); // گرینڈ ٹوٹل کے لیے ہرا رنگ
+            
+            // شاداب فارمیسی شیٹ کے نچلے حصے پر ٹوٹل اماؤنٹ پرنٹ کرنا
+            pdf.text("Grand Total Received: Rs " + window.lastCalculatedTotal.toLocaleString(), 20, 240);
+        }
+        
         const userInputs = document.querySelectorAll('.live-tap-input-field');
         userInputs.forEach(input => {
             const px = parseFloat(input.dataset.percentX) || 0;
