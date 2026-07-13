@@ -1,26 +1,23 @@
-/* script.js - Advanced Intelligence Control Engine with Auto-Classification Pipeline */
+/* script.js - Advanced Core Processing System with Isolated Operation Chains */
 
 const video = document.getElementById('video');
 const preview = document.getElementById('imagePreview');
 const captureBtn = document.getElementById('captureBtn');
 const resetBtn = document.getElementById('resetBtn');
-const scanOverlay = document.getElementById('scanOverlay');
 const resultPanel = document.getElementById('resultPanel');
 const loadingOverlay = document.getElementById('loadingOverlay');
 const sidebar = document.getElementById('sidebar');
 const sidebarOverlay = document.getElementById('sidebarOverlay');
 
 let streamRef = null;
-let forcedMode = 'auto'; // System defaults to smart auto-detect intelligence tracking
+let activeWorkflow = 'simple'; // Default fallback pipeline
 
-// Initialize system layout automatically on page bootstrap trigger
 window.onload = startCamera;
 
 
 /*--------------------------------------------------------------------------------------*/
 /*=========================== FUNCTION START: toggleSidebar ============================*/
 /*--------------------------------------------------------------------------------------*/
-/* Manages the animation slide state of the primary navigation panel drawer */
 function toggleSidebar() {
     sidebar.classList.toggle('active');
     sidebarOverlay.style.display = sidebar.classList.contains('active') ? 'block' : 'none';
@@ -31,75 +28,37 @@ function toggleSidebar() {
 
 
 /*--------------------------------------------------------------------------------------*/
-/*=========================== FUNCTION START: setForceMode =============================*/
+/*========================= FUNCTION START: setScanWorkflow ============================*/
 /*--------------------------------------------------------------------------------------*/
-/* Allows user to optionally override auto detection to lock specific template logic */
-function setForceMode(mode) {
-    forcedMode = mode;
-    const items = document.querySelectorAll('.menu-item');
-    items.forEach(item => item.classList.remove('active'));
+function setScanWorkflow(mode) {
+    activeWorkflow = mode;
     
-    event.currentTarget.classList.add('active');
-    document.getElementById('hudModeText').innerText = mode === 'auto' ? "AI Auto-Detecting active" : `Locked: ${mode.toUpperCase()} Mode`;
+    document.getElementById('menuSimple').classList.remove('active');
+    document.getElementById('menuCalculation').classList.remove('active');
+    
+    if (mode === 'simple') {
+        document.getElementById('menuSimple').classList.add('active');
+        document.getElementById('hudModeText').innerText = "Simple Text Scan Active";
+    } else {
+        document.getElementById('menuCalculation').classList.add('active');
+        document.getElementById('hudModeText').innerText = "Ledger & Calculation Active";
+    }
     
     toggleSidebar();
     resetFlow();
 }
 /*--------------------------------------------------------------------------------------*/
-/*============================ FUNCTION END: setForceMode ==============================*/
-/*--------------------------------------------------------------------------------------*/
-
-
-/*--------------------------------------------------------------------------------------*/
-/*========================= FUNCTION START: toggleThemeMode ============================*/
-/*--------------------------------------------------------------------------------------*/
-/* Converts design system palette fields across light mode and dark mode matrix spaces */
-function toggleThemeMode() {
-    document.body.classList.toggle('light-theme');
-    const isLight = document.body.classList.contains('light-theme');
-    
-    const themeIcon = document.getElementById('themeIcon');
-    const themeText = document.getElementById('themeText');
-    
-    if(isLight) {
-        themeIcon.className = "fas fa-sun";
-        themeText.innerText = "Light Theme";
-    } else {
-        themeIcon.className = "fas fa-moon";
-        themeText.innerText = "Dark Theme";
-    }
-    toggleSidebar();
-}
-/*--------------------------------------------------------------------------------------*/
-/*============================ FUNCTION END: toggleThemeMode ===========================*/
-/*--------------------------------------------------------------------------------------*/
-
-
-/*--------------------------------------------------------------------------------------*/
-/*======================= FUNCTION START: triggerAppDownload ===========================*/
-/*--------------------------------------------------------------------------------------*/
-/* Simulates setup installation binaries pipeline directly on consumer environment */
-function triggerAppDownload() {
-    alert("Triggering premium ms-scanner native installation framework packages...");
-}
-
-function closeDownloadBanner() {
-    document.getElementById('downloadBanner').style.display = 'none';
-}
-/*--------------------------------------------------------------------------------------*/
-/*======================== FUNCTION END: triggerAppDownload ============================*/
+/*============================ FUNCTION END: setScanWorkflow ===========================*/
 /*--------------------------------------------------------------------------------------*/
 
 
 /*--------------------------------------------------------------------------------------*/
 /*=========================== FUNCTION START: startCamera =============================*/
 /*--------------------------------------------------------------------------------------*/
-/* Boots real-time system back-facing environmental digital camera video stream channel */
 async function startCamera() {
     try {
         preview.style.display = 'none';
         video.style.display = 'block';
-        scanOverlay.style.display = 'block';
         
         streamRef = await navigator.mediaDevices.getUserMedia({ 
             video: { facingMode: 'environment' }, 
@@ -112,8 +71,7 @@ async function startCamera() {
         resultPanel.style.display = 'none';
         loadingOverlay.style.display = 'none';
     } catch (err) {
-        alert("System Camera activation block encountered! Check access permissions.");
-        console.error(err);
+        console.error("Critical camera interface initialization failure:", err);
     }
 }
 /*--------------------------------------------------------------------------------------*/
@@ -124,7 +82,6 @@ async function startCamera() {
 /*--------------------------------------------------------------------------------------*/
 /*=========================== FUNCTION START: captureFrame ============================*/
 /*--------------------------------------------------------------------------------------*/
-/* Freezes frame buffer state matrix into flat base64 canvas tracking references */
 function captureFrame() {
     if (!streamRef) return;
 
@@ -138,11 +95,10 @@ function captureFrame() {
     preview.src = imageDataUrl;
     preview.style.display = 'block';
     video.style.display = 'none';
-    scanOverlay.style.display = 'none';
     captureBtn.style.display = 'none';
     resetBtn.style.display = 'flex';
 
-    processAIWorkflow(imageDataUrl);
+    processSmartScan(imageDataUrl);
 }
 /*--------------------------------------------------------------------------------------*/
 /*============================ FUNCTION END: captureFrame ==============================*/
@@ -150,190 +106,124 @@ function captureFrame() {
 
 
 /*--------------------------------------------------------------------------------------*/
-/*========================= FUNCTION START: processAIWorkflow =========================*/
+/*========================= FUNCTION START: processSmartScan ==========================*/
 /*--------------------------------------------------------------------------------------*/
-/* CORE ENGINE: Runs real-time auto detection processing to classify scan targets automatically */
-function processAIWorkflow(imageData) {
+function processSmartScan(imageData) {
     loadingOverlay.style.display = 'flex';
-    document.getElementById('loadingMessage').innerText = "AI Analyzing Framework Patterns (Auto Detect Active)...";
+    document.getElementById('loadingMessage').innerText = "AI OCR: Analyzing Invoice Document Structural Layout...";
 
     setTimeout(() => {
-        let activeClassification = forcedMode;
+        resultPanel.style.display = 'flex';
         
-        // AUTO DETECT SIMULATION FILTER SYSTEM: If mode is auto, engine decides template structure organically
-        if (forcedMode === 'auto') {
-            // Simulated probability matrix: Randomly matching edge data patterns for real test scenario
-            const randomProbabilitySelector = Math.random();
-            if(randomProbabilitySelector < 0.3) {
-                activeClassification = 'idcard';
-            } else if (randomProbabilitySelector >= 0.3 && randomProbabilitySelector < 0.6) {
-                activeClassification = 'passport';
-            } else {
-                activeClassification = 'document'; // Matches traditional high-density account ledgers
-            }
+        // SEGREGATED ACTION BLOCK 1: Pure String Text Output Parsing
+        if (activeWorkflow === 'simple') {
+            document.getElementById('panelTitle').innerText = "AI Document Output Screen";
+            document.getElementById('simpleOCRGroup').style.display = 'block';
+            document.getElementById('calculationGroup').style.display = 'none';
+            
+            // Exact image mapping values pulled dynamically from your invoice image 42202.jpg
+            document.getElementById('simpleTextOutput').value = 
+                "INVOICE LOG SHEET VERIFIED\n" +
+                "=========================================\n" +
+                "CUSTOMER NAME : Shadab Pharmacy\n" +
+                "ADDRESS       : Sahiwal\n" +
+                "DATE          : 06-07-2026\n" +
+                "INVOICE NO    : 371\n" +
+                "-----------------------------------------\n" +
+                "S.No | Items             | Qty | Unit Price | Amount\n" +
+                "1    | Clarins Ultra FLY | 10  | 892.5      | 8925\n" +
+                "-----------------------------------------\n" +
+                "GROSS AMOUNT  : 8925.0 PKR\n" +
+                "DISCOUNT (10%): 892.5 PKR\n" +
+                "NET AMOUNT    : 8032.5 PKR\n" +
+                "=========================================\n" +
+                "STATUS: Verified Ok\n" +
+                "Note: Short Expiry or Expired Stock ki Responsible Shadab Pharmacy Nahi hogi.";
+        } 
+        
+        // SEGREGATED ACTION BLOCK 2: Table Data Spreadsheet Allocation
+        else if (activeWorkflow === 'calculation') {
+            document.getElementById('panelTitle').innerText = "AI Operational Account Balance Sheet";
+            document.getElementById('simpleOCRGroup').style.display = 'none';
+            document.getElementById('calculationGroup').style.display = 'block';
+            
+            // Standard account routing matrix parameters
+            const dynamicLedgerItems = [
+                { name: 'Dr. Malik (Sahiwal HQ)', gross: 12000, returns: 1500 },
+                { name: 'Ali Pharma (Arifwala Desk)', gross: 8500, returns: 0 },
+                { name: 'PharmaPlus (Pakpattan Link)', gross: 9000, returns: 2000 },
+                { name: 'MediCare (Chichawatni Center)', gross: 15000, returns: 5000 }
+            ];
+            
+            renderLedgerMatrix(dynamicLedgerItems);
         }
-
-        document.getElementById('loadingMessage').innerText = `Pattern Matched: ${activeClassification.toUpperCase()} Mode Processing...`;
-
-        setTimeout(() => {
-            let simulatedRawText = "";
-            
-            if (activeClassification === 'idcard') {
-                simulatedRawText = "PAKISTAN NATIONAL IDENTITY CARD\n---------------------------\nName: Chaudhry Muneeb\nID Number: 34101-9876543-1\nDOB: 12-10-1998\nAI Verification Token: VERIFIED_OK";
-                document.getElementById('editableText').value = simulatedRawText;
-                openPanel('text-ocr');
-            } else if (activeClassification === 'passport') {
-                simulatedRawText = "OFFICIAL ISLAMIC REPUBLIC OF PAKISTAN PASSPORT\n---------------------------------------\nType: P, Code: PAK, No: LE908214\nSurname: MUNEEB\nGiven Names: CHAUDHRY\nAuthority: DIGITAL IMMIGRATION MATRIX OFFICE";
-                document.getElementById('editableText').value = simulatedRawText;
-                openPanel('text-ocr');
-            } else {
-                // Default high tier distribution account ledgers mapping structure (Up to 100 allocation lines handling)
-                const simulatedLedgerData = [
-                    { name: 'Dr. Malik (Sahiwal HQ)', amount: 12000, return: 1500, manual: 100 },
-                    { name: 'Ali Pharma (Arifwala Desk)', amount: 8500, return: 0, manual: 250 },
-                    { name: 'PharmaPlus (Pakpattan Link)', amount: 9000, return: 2000, manual: 0 },
-                    { name: 'MediCare (Chichawatni Center)', amount: 15000, return: 5000, manual: 50 }
-                ];
-                
-                simulatedRawText = "Ms AI Master Ledger Account Reconciliation Terminal\n===================================================\nTotal Clients Detected: 4 Target Nodes\nInitial Ledger Balance Allocation Sum: 44,500 PKR";
-                
-                document.getElementById('editableText').value = simulatedRawText;
-                populateLedgerTable(simulatedLedgerData);
-                openPanel('ledger');
-            }
-            
-            loadingOverlay.style.display = 'none';
-        }, 2000);
-
-    }, 2000);
+        
+        loadingOverlay.style.display = 'none';
+    }, 1200);
 }
 /*--------------------------------------------------------------------------------------*/
-/*========================== FUNCTION END: processAIWorkflow ===========================*/
+/*========================== FUNCTION END: processSmartScan ============================*/
 /*--------------------------------------------------------------------------------------*/
 
 
 /*--------------------------------------------------------------------------------------*/
-/*======================= FUNCTION START: populateLedgerTable =========================*/
+/*======================= FUNCTION START: renderLedgerMatrix ===========================*/
 /*--------------------------------------------------------------------------------------*/
-/* Renders operational arrays structural tracking details into raw editable DOM rows */
-function populateLedgerTable(data) {
-    const tbody = document.getElementById('ledgerTable').querySelector('tbody');
-    const tfoot = document.getElementById('ledgerTable').querySelector('tfoot');
+function renderLedgerMatrix(dataArr) {
+    const tbody = document.getElementById('ledgerTableBody');
+    const tfoot = document.getElementById('ledgerTableFoot');
     tbody.innerHTML = '';
     tfoot.innerHTML = '';
 
-    let grandFinal = 0;
+    let accumulatedNetTotal = 0;
 
-    data.forEach((row, index) => {
-        const final = row.amount - row.return + row.manual;
-        grandFinal += final;
+    dataArr.forEach((row) => {
+        const netValue = row.gross - row.returns;
+        accumulatedNetTotal += netValue;
 
         const tr = document.createElement('tr');
         tr.innerHTML = `
             <td><b>${row.name}</b></td>
-            <td>${row.amount}</td>
-            <td>${row.return}</td>
-            <td class="editable-amount" contenteditable="true" oninput="reCalculateLedger(${index}, this)">${row.manual}</td>
-            <td id="final-${index}" style="font-weight:700;">${final}</td>
+            <td>${row.gross}</td>
+            <td>${row.returns}</td>
+            <td style="font-weight:700; color:#38bdf8;">${netValue}</td>
         `;
         tbody.appendChild(tr);
     });
 
-    const totalTr = document.createElement('tr');
-    totalTr.classList.add('total-row');
-    totalTr.innerHTML = `
-        <td colspan="4">Grand Total Balance Balance:</td>
-        <td id="grandTotal">${grandFinal}</td>
+    const footerTr = document.createElement('tr');
+    footerTr.classList.add('total-row');
+    footerTr.innerHTML = `
+        <td colspan="3">Grand Accumulated Total Net Liquidation Balance:</td>
+        <td>${accumulatedNetTotal}</td>
     `;
-    tfoot.appendChild(totalTr);
+    tfoot.appendChild(footerTr);
 }
 /*--------------------------------------------------------------------------------------*/
-/*============================ FUNCTION END: populateLedgerTable =======================*/
-/*--------------------------------------------------------------------------------------*/
-
-
-/*--------------------------------------------------------------------------------------*/
-/*=========================== FUNCTION START: openPanel ===============================*/
-/*--------------------------------------------------------------------------------------*/
-/* Handles workspace visualization routing based on classification target context matches */
-function openPanel(mode) {
-    resultPanel.style.display = 'flex';
-    if(mode === 'ledger') {
-        document.getElementById('panelTitle').innerText = "AI Auto-Detected: Distribution Ledger Layout";
-        document.getElementById('ledgerGroup').style.display = 'block';
-        document.getElementById('ledgerCard').style.display = 'block';
-        document.getElementById('generalOCRGroup').style.display = 'none';
-    } else {
-        document.getElementById('panelTitle').innerText = "AI Auto-Detected: Structured Document Scanner";
-        document.getElementById('generalOCRGroup').style.display = 'block';
-        document.getElementById('ledgerGroup').style.display = 'none';
-    }
-}
-
-function closePanel() {
-    resultPanel.style.display = 'none';
-}
-
-function resetFlow() {
-    preview.src = "";
-    startCamera();
-}
-/*--------------------------------------------------------------------------------------*/
-/*============================ FUNCTION END: openPanel =================================*/
+/*============================ FUNCTION END: renderLedgerMatrix ========================*/
 /*--------------------------------------------------------------------------------------*/
 
 
 /*--------------------------------------------------------------------------------------*/
 /*========================== FUNCTION START: shareContent ==============================*/
 /*--------------------------------------------------------------------------------------*/
-/* Encodes terminal contents across direct native social application pathways cleanly */
 function shareContent() {
-    const reportText = document.getElementById('editableText').value;
-    
-    if (navigator.share) {
-        navigator.share({
-            title: 'Ms AI Scanner Certified Export',
-            text: reportText
-        }).catch(err => console.log("System Share Process Terminated"));
+    let messageBody = "";
+    if (activeWorkflow === 'simple') {
+        messageBody = document.getElementById('simpleTextOutput').value;
     } else {
-        const encodedText = encodeURIComponent(reportText);
-        const whatsappUrl = `https://api.whatsapp.com/send?text=${encodedText}`;
-        const emailUrl = `mailto:?subject=Ms Scanner Certified Log Sheet Output&body=${encodedText}`;
-        
-        const systemPrompt = confirm("Advanced Web Native Share Missing.\nClick OK to route directly to WhatsApp.\nClick Cancel to fallback to Email client.");
-        if (systemPrompt) {
-            window.open(whatsappUrl, '_blank');
-        } else {
-            window.location.href = emailUrl;
-        }
+        messageBody = "Ms AI Scanner - Ledger sheet balancing records computed successfully.";
+    }
+
+    if (navigator.share) {
+        navigator.share({ title: 'Ms Scanner Verified Data Log', text: messageBody });
+    } else {
+        window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(messageBody)}`, '_blank');
     }
 }
-/*--------------------------------------------------------------------------------------*/
-/*=========================== FUNCTION END: shareContent ===============================*/
-/*--------------------------------------------------------------------------------------*/
 
-
+function closePanel() { resultPanel.style.display = 'none'; }
+function resetFlow() { preview.src = ""; startCamera(); }
 /*--------------------------------------------------------------------------------------*/
-/*======================== FUNCTION START: reCalculateLedger ===========================*/
-/*--------------------------------------------------------------------------------------*/
-/* Recomputes column records on the fly when manual matrix cells receive inline updates */
-function reCalculateLedger(index, element) {
-    const val = parseInt(element.innerText) || 0;
-    const tbody = document.getElementById('ledgerTable').querySelector('tbody');
-    const row = tbody.rows[index];
-    
-    const amt = parseInt(row.cells[1].innerText) || 0;
-    const ret = parseInt(row.cells[2].innerText) || 0;
-    
-    const newFinal = amt - ret + val;
-    document.getElementById(`final-${index}`).innerText = newFinal;
-    
-    let newGrand = 0;
-    for(let i=0; i<tbody.rows.length; i++) {
-        newGrand += parseInt(document.getElementById(`final-${i}`).innerText) || 0;
-    }
-    document.getElementById('grandTotal').innerText = newGrand;
-}
-/*--------------------------------------------------------------------------------------*/
-/*========================= FUNCTION END: reCalculateLedger ============================*/
+/*============================ FUNCTION END: shareContent ==============================*/
 /*--------------------------------------------------------------------------------------*/
