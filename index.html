@@ -344,112 +344,133 @@
         .btn-action-premium.primary { background: var(--cs-green); }
     </style>
 </head>
+    <!-- ==================== START: GLOBAL LOADING SPINNER ==================== -->
+<div id="globalLoader" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:9999; justify-content:center; align-items:center; flex-direction:column;">
+    <div style="border:4px solid #f3f3f3; border-top:4px solid #0bb376; border-radius:50%; width:40px; height:40px; animation: spin 1s linear infinite;"></div>
+    <p style="color:#fff; margin-top:15px; font-family:sans-serif;">Processing AI Data...</p>
+</div>
+<style>
+    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+</style>
+<!-- ==================== END: GLOBAL LOADING SPINNER ==================== -->
+    
 <body>
+<!-- ==================== START: PWA METADATA & RESPONSIVE CONFIG ==================== -->
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#222531">
+<link rel="manifest" href="manifest.json">
+<!-- ==================== END: PWA METADATA & RESPONSIVE CONFIG ==================== -->
+    
+<!-- ==================== START: HEADER & SIDEBAR ==================== -->
+<header class="cs-header">
+    <div class="cs-logo-text" onclick="switchTab('home')">MS CamScanner <span>AI PRO</span></div>
+    <button class="hamburger-menu-btn" onclick="toggleSidebar(true)">☰</button>
+</header>
 
-    <!-- Header Grid -->
-    <header class="cs-header">
-        <div class="cs-logo-text" onclick="switchTab('home')">MS CamScanner <span>AI PRO</span></div>
-        <button class="hamburger-menu-btn" onclick="toggleSidebar(true)">☰</button>
-    </header>
+<div id="sidebarMenu" class="sidebar-menu">
+    <h3 style="margin-bottom:20px; color: var(--cs-green)">Menu Options</h3>
+    <div class="sidebar-item" onclick="triggerPDFUpload()">📥 Import Remote PDF</div>
+    <div class="sidebar-item" onclick="alert('Premium Features Active')">⭐ AI Enhance Text</div>
+    <div class="sidebar-item" onclick="toggleSidebar(false)" style="color:var(--cs-red); margin-top:30px;">✕ Close Menu</div>
+</div>
+<!-- ==================== END: HEADER & SIDEBAR ==================== -->
 
-    <!-- Side Menu (Hamburger Context) -->
-    <div id="sidebarMenu" class="sidebar-menu">
-        <h3 style="margin-bottom:20px; color: var(--cs-green)">Menu Options</h3>
-        <div class="sidebar-item" onclick="triggerPDFUpload()">📥 Import Remote PDF</div>
-        <div class="sidebar-item" onclick="alert('Premium Features Active')">⭐ AI Enhance Text</div>
-        <div class="sidebar-item" onclick="toggleSidebar(false)" style="color:var(--cs-red); margin-top:30px;">✕ Close Menu</div>
-    </div>
-
-<!-- ==================== START: LIVE CAMERA STREAM OVERLAY ==================== -->
-<div id="cameraOverlay" class="camera-overlay-screen">
-    <video id="webcamStream" autoplay playsinline></video>
-    <div id="cameraFrameGuide" style="position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); border:2px dashed #fff; border-radius:8px; pointer-events:none; transition: all 0.3s ease;"></div>
-    <div class="cam-controls">
+<!-- ==================== START: CAMERA OVERLAY & GUIDE ==================== -->
+<div id="cameraOverlay" class="camera-overlay-screen" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:#000; z-index:4000; flex-direction:column; justify-content:center; align-items:center;">
+    <video id="webcamStream" autoplay playsinline style="width:100%; height:100%; object-fit:cover; position:absolute;"></video>
+    <!-- یہ وہ گائیڈ باکس ہے جو شناختی کارڈ یا ڈاکومنٹ کے لیے کام کرے گا -->
+    <div id="cameraFrameGuide" style="position:relative; border:2px dashed #fff; border-radius:8px; pointer-events:none; z-index:4100; transition: all 0.3s ease; width:90%; height:70%;"></div>
+    
+    <div class="cam-controls" style="position:absolute; bottom:40px; z-index:4200;">
         <button class="btn-action-premium" onclick="closeLiveCamera()" style="background:var(--cs-red)">× Cancel</button>
         <div class="shutter-cam-btn" onclick="captureLiveSnapshot()" style="transform:none; width:65px; height:65px;"></div>
         <button class="btn-action-premium" onclick="document.getElementById('fileInput').click()">Gallery</button>
     </div>
 </div>
-<!-- ==================== END: LIVE CAMERA STREAM OVERLAY ==================== -->
+<!-- ==================== END: CAMERA OVERLAY & GUIDE ==================== -->
     
+<!-- ==================== START: HOME & FILES TABS ==================== -->
+<main id="panel-home" class="view-panel active">
+    <div class="section-title">Recent Workspaces <span>View All</span></div>
+    <div id="recents-list-container"></div>
+</main>
 
-    <!-- Home Tab View -->
-    <main id="panel-home" class="view-panel active">
-        <div class="section-title">Recent Workspaces <span>View All</span></div>
-        <div id="recents-list-container"></div>
-    </main>
+<main id="panel-files" class="view-panel">
+    <div class="section-title">All Engine Logs & Documents</div>
+    <div id="all-files-list-container"></div>
+</main>
+<!-- ==================== END: HOME & FILES TABS ==================== -->
 
-    <!-- Files Tab View -->
-    <main id="panel-files" class="view-panel">
-        <div class="section-title">All Engine Logs & Documents</div>
-        <div id="all-files-list-container"></div>
-    </main>
+<!-- ==================== START: TOOLS TAB (UPDATED) ==================== -->
+<main id="panel-tools" class="view-panel">
+    <div class="section-title">2026 Advanced AI Services</div>
+    <div class="tools-grid-box">
+        <button class="tool-icon-btn" onclick="triggerDirectConvert('document')">
+            <div class="tool-icon-circle" style="background: #ef4444;">PDF</div>
+            <span>Scan Doc</span>
+        </button>
+        <button class="tool-icon-btn" onclick="triggerDirectConvert('idcard')">
+            <div class="tool-icon-circle" style="background: #10b981;">🪪</div>
+            <span>ID Card</span>
+        </button>
+        <button class="tool-icon-btn" onclick="triggerDirectConvert('edit')">
+            <div class="tool-icon-circle" style="background: #8b5cf6;">✎</div>
+            <span>Live Edit</span>
+        </button>
+    </div>
+</main>
+<!-- ==================== END: TOOLS TAB (UPDATED) ==================== -->
+    <!-- ==================== START: ME TAB ==================== -->
+<main id="panel-me" class="view-panel">
+    <div class="recent-card"><h3>Muneeb AI Pro Enterprise Account [2026]</h3></div>
+</main>
+<!-- ==================== END: ME TAB ==================== -->
 
-    <!-- Tools Tab View -->
-    <main id="panel-tools" class="view-panel">
-        <div class="section-title">2026 Advanced AI Services</div>
-        <div class="tools-grid-box">
-            <button class="tool-icon-btn" onclick="triggerDirectConvert('jpg2pdf')">
-                <div class="tool-icon-circle" style="background: #ef4444;">PDF</div>
-                <span>To PDF</span>
-            </button>
-            <button class="tool-icon-btn" onclick="triggerDirectConvert('excel')">
-                <div class="tool-icon-circle" style="background: #10b981;">XLS</div>
-                <span>To Excel</span>
-            </button>
-            <button class="tool-icon-btn" onclick="launchLiveEdit()">
-                <div class="tool-icon-circle" style="background: #8b5cf6;">✎</div>
-                <span>Live Edit</span>
-            </button>
-        </div>
-    </main>
-
-    <!-- Me Profile Tab View -->
-    <main id="panel-me" class="view-panel">
-        <div class="recent-card"><h3>Muneeb AI Pro Enterprise Account [2026]</h3></div>
-    </main>
-
-    <!-- Immersive Interactive Live-Tap Advanced Editing Workspace -->
-    <div id="premiumWorkspace" class="workspace-fullscreen">
-        <div class="cs-header">
-            <div class="cs-logo-text" onclick="closeWorkspace()">✕ Exit Engine</div>
-            <div style="font-size:0.85rem; color:var(--cs-green);">💡 Tap anywhere to match rightwriting & text!</div>
-        </div>
-        
-        <div class="canvas-container-box">
-            <div class="overlay-text-wrapper" id="canvasBaseWrapper">
-                <img id="interactiveCanvasBase" onclick="handleCanvasTap(event)">
-                <div id="editableFieldsContainer"></div>
-            </div>
-        </div>
-
-        <!-- Real-time Image Filter Strips -->
-        <div class="filter-strip-box">
-            <div class="filter-thumb active" onclick="applyImageFilter('original', this)">Original</div>
-            <div class="filter-thumb" onclick="applyImageFilter('magicColor', this)">Magic Color AI</div>
-            <div class="filter-thumb" onclick="applyImageFilter('bw', this)">B&W Document</div>
-            <div class="filter-thumb" onclick="applyImageFilter('grayscale', this)">Grayscale</div>
-        </div>
-        
-        <div class="ws-bottom-actions">
-            <button class="btn-action-premium" onclick="processDoc('pdf')">💾 Download PDF</button>
-            <button class="btn-action-premium primary" onclick="shareToWhatsApp()">🚀 WhatsApp Share</button>
+<!-- ==================== START: PREMIUM WORKSPACE ==================== -->
+<div id="premiumWorkspace" class="workspace-fullscreen">
+    <div class="cs-header">
+        <div class="cs-logo-text" onclick="closeWorkspace()">✕ Exit Engine</div>
+        <!-- یہاں ورک اسپیس ٹائٹل خودکار اپڈیٹ ہوگا -->
+        <div id="workspaceTitle" style="font-size:0.85rem; color:var(--cs-green); font-weight:bold;">Smart AI Editor</div>
+    </div>
+    
+    <div class="canvas-container-box">
+        <div class="overlay-text-wrapper" id="canvasBaseWrapper">
+            <img id="interactiveCanvasBase" onclick="handleCanvasTap(event)">
+            <div id="editableFieldsContainer"></div>
         </div>
     </div>
 
-    <!-- Persistent Bottom Navigation Bars -->
-    <nav class="cs-bottom-nav">
-        <button class="nav-tab active" id="tab-home" onclick="switchTab('home')">Home</button>
-        <button class="nav-tab" id="tab-files" onclick="switchTab('files')">Files</button>
-        <div class="upload-wrapper">
-            <button class="shutter-cam-btn" onclick="openLiveCamera()">+</button>
-            <input type="file" id="fileInput" hidden accept="image/*" onchange="handleFile(this)">
-            <input type="file" id="pdfFileInput" hidden accept="application/pdf" onchange="handlePDFUpload(this)">
-        </div>
-        <button class="nav-tab" id="tab-tools" onclick="switchTab('tools')">Tools</button>
-        <button class="nav-tab" id="tab-me" onclick="switchTab('me')">Me</button>
-    </nav>
+    <div class="filter-strip-box">
+        <div class="filter-thumb active" onclick="applyImageFilter('original', this)">Original</div>
+        <div class="filter-thumb" onclick="applyImageFilter('magicColor', this)">Magic Color AI</div>
+        <div class="filter-thumb" onclick="applyImageFilter('bw', this)">B&W Document</div>
+        <div class="filter-thumb" onclick="applyImageFilter('grayscale', this)">Grayscale</div>
+    </div>
+    
+    <div class="ws-bottom-actions">
+        <button class="btn-action-premium" onclick="processDoc('pdf')">💾 Download PDF</button>
+        <button class="btn-action-premium primary" onclick="shareToWhatsApp()">🚀 WhatsApp Share</button>
+    </div>
+</div>
+<!-- ==================== END: PREMIUM WORKSPACE ==================== -->
+    <!-- ==================== START: NAVIGATION BAR ==================== -->
+<nav class="cs-bottom-nav">
+    <button class="nav-tab active" id="tab-home" onclick="switchTab('home')">Home</button>
+    <button class="nav-tab" id="tab-files" onclick="switchTab('files')">Files</button>
+    <div class="upload-wrapper">
+        <button class="shutter-cam-btn" onclick="openLiveCamera()">+</button>
+        <input type="file" id="fileInput" hidden accept="image/*" onchange="handleFile(this)">
+        <input type="file" id="pdfFileInput" hidden accept="application/pdf" onchange="handlePDFUpload(this)">
+    </div>
+    <button class="nav-tab" id="tab-tools" onclick="switchTab('tools')">Tools</button>
+    <button class="nav-tab" id="tab-me" onclick="switchTab('me')">Me</button>
+</nav>
+<!-- ==================== END: NAVIGATION BAR ==================== -->
 
+<!-- یہاں آپ کا جاوا اسکرپٹ کا کوڈ آئے گا -->
+    
 <!-- END OF PART 1 -->
     <script>
   // ==================== START: APP INITIALIZATION FUNCTION ====================
@@ -859,4 +880,4 @@ function closeWorkspace() {
     loadedImgBase64 = null;
 }
 // ==================== END: CLOSE WORKSPACE FUNCTION ====================
-        
+  <script>      
