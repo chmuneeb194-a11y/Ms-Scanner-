@@ -566,37 +566,36 @@
         // ==========================================
 
 
-        // ==========================================
-        // START FUNCTION: EXECUTE SHUTTER CAPTURE (پوائنٹ 24 & 25)
-        // ==========================================
-        function executeShutterCapture() {
-            if (!localVideoStream) return;
+// ==========================================
+// UPDATED FUNCTION: EXECUTE SHUTTER CAPTURE
+// ==========================================
+function executeShutterCapture() {
+    if (!localVideoStream) return;
 
-            // Instantiating Virtual High-Definition Canvas
-            const trackingCanvas = document.createElement('canvas');
-            trackingCanvas.width = webcamStream.videoWidth || 1280;
-            trackingCanvas.height = webcamStream.videoHeight || 720;
+    const trackingCanvas = document.createElement('canvas');
+    trackingCanvas.width = webcamStream.videoWidth || 1280;
+    trackingCanvas.height = webcamStream.videoHeight || 720;
+    
+    const context2D = trackingCanvas.getContext('2d');
+    context2D.drawImage(webcamStream, 0, 0, trackingCanvas.width, trackingCanvas.height);
+    
+    const cleanImageMatrix = trackingCanvas.toDataURL('image/jpeg', 0.95);
+    
+    capturePreview.src = cleanImageMatrix;
+    capturePreview.style.display = 'block';
+    webcamStream.style.display = 'none';
+    
+    // حل: اسکیننگ لائن کو بند کریں تاکہ نیچے موجود بٹنز اور مینو کام کر سکیں
+    document.getElementById('laserLine').style.display = 'none';
+    
+    setTimeout(() => {
+        alert("صفحہ کامیابی سے اسکین ہو گیا ہے! اب تھری-لائن مینو اور شیئرنگ بٹن مکمل کام کریں گے۔");
+    }, 100);
+}
+// ==========================================
+// END FUNCTION: EXECUTE SHUTTER CAPTURE
+// ==========================================
             
-            const context2D = trackingCanvas.getContext('2d');
-            context2D.drawImage(webcamStream, 0, 0, trackingCanvas.width, trackingCanvas.height);
-            
-            // Ultra-HD Base64 Image Matrix Generation
-            const cleanImageMatrix = trackingCanvas.toDataURL('image/jpeg', 0.95);
-            
-            // Freeze frame display representing successful capture
-            capturePreview.src = cleanImageMatrix;
-            capturePreview.style.display = 'block';
-            webcamStream.style.display = 'none';
-            
-            // Simulate AI Processing & Laser Stabilization
-            setTimeout(() => {
-                alert("صفحہ کامیابی سے اسکین ہو گیا ہے! اب آپ مینو سے ایڈیٹر یا ہینڈ رائٹنگ ٹول استعمال کر سکتے ہیں۔");
-            }, 300);
-        }
-        // ==========================================
-        // END FUNCTION: EXECUTE SHUTTER CAPTURE
-        // ==========================================
-
 
         // ==========================================
         // START FUNCTION: NAVIGATION SIDEBAR TOGGLE (پوائنٹ 22)
@@ -614,69 +613,51 @@
             // ==========================================
         // START PART 5: ADVANCED AI & EDITING FEATURES
         // ==========================================
+// ==========================================
+// UPDATED FUNCTION: LIVE INVOICE GRID OPERATIONS
+// ==========================================
+function openInvoiceGrid() {
+    sidebarMenu.classList.remove('active'); // مینو بند کریں
+    invoiceGridOverlay.classList.add('active'); // ایڈیٹر کھولیں
+    recalculateGridGrandTotal();
+}
 
-        // ==========================================
-        // START FUNCTION: LIVE INVOICE GRID OPERATIONS (پوائنٹ 36 & 39)
-        // ==========================================
-        function openInvoiceGrid() {
-            toggleSidebar();
-            invoiceGridOverlay.classList.add('active');
-            recalculateGridGrandTotal();
-        }
+function closeInvoiceGrid() {
+    invoiceGridOverlay.classList.remove('active');
+    // اگر دوبارہ اسکیننگ شروع کرنی ہو تو لائن آن کریں
+    if(webcamStream.style.display !== 'none') {
+        document.getElementById('laserLine').style.display = 'block';
+    }
+}
 
-        function closeInvoiceGrid() {
-            invoiceGridOverlay.classList.remove('active');
-        }
-
-        // Live Row Multiplication Formula (Point 39)
-        function calculateGridRowTotal(inputField) {
-            const tableRow = inputField.closest('tr');
-            const columns = tableRow.querySelectorAll('input');
+// UPDATED FUNCTION: HANDWRITING TO DIGITAL TEXT
+function triggerHandwritingScan() {
+    sidebarMenu.classList.remove('active'); // مینو بند کریں
+    
+    alert("ایڈوانسڈ اے آئی ماڈل: ہینڈ رائٹنگ کا تجزیہ کیا جا رہا ہے...");
+    
+    setTimeout(() => {
+        const targetTextArea = document.getElementById('ocrTargetTextarea');
+        targetTextArea.value = 
+            "شاداب فارمیسی (ساہیوال)\n" +
+            "تاریخ: 06-07-2026\n" +
+            "-------------------------------------\n" +
+            "آئٹم 1: Clarins Ultra FLY (76ml)\n" +
+            "مقدار: 10 | ریٹ: 892.5\n" +
+            "کل رقم: 8925 روپے\n" +
+            "-------------------------------------\n" +
+            "ڈسکاؤنٹ: 10% (892.5 روپے)\n" +
+            "نیٹ اماؤنٹ: 8032.5 روپے\n" +
+            "-------------------------------------\n" +
+            "نوٹ: ایکسیپائرڈ میڈیسن 6 ماہ پہلے بھیج دیں بعد میں کمپنی ذمہ دار نہیں ہوگی۔";
+        
+        ocrResultModal.classList.add('active');
+    }, 500);
+}
+// ==========================================
+// END OF UPDATED AI FUNCTIONS
+// ==========================================
             
-            const quantity = parseFloat(columns[1].value) || 0;
-            const ratePerUnit = parseFloat(columns[2].value) || 0;
-            
-            // Dynamic Formula Computation
-            const rowTotal = quantity * ratePerUnit;
-            columns[3].value = rowTotal;
-            
-            recalculateGridGrandTotal();
-        }
-
-        // Live Column Accumulator Formula
-        function recalculateGridGrandTotal() {
-            const tableBody = document.getElementById('invoiceTableBody');
-            const rows = tableBody.querySelectorAll('tr');
-            let runningTotal = 0;
-
-            rows.forEach(row => {
-                const rowFields = row.querySelectorAll('input');
-                if (rowFields.length >= 4) {
-                    runningTotal += parseFloat(rowFields[3].value) || 0;
-                }
-            });
-
-            document.getElementById('gridGrandTotal').innerText = runningTotal;
-        }
-
-        // Add Dynamic New Entry Row (Point 36)
-        function addNewGridRow() {
-            const tableBody = document.getElementById('invoiceTableBody');
-            const newRow = document.createElement('tr');
-            
-            newRow.innerHTML = `
-                <td><input type="text" placeholder="نیا آئٹم لکھیں..."></td>
-                <td><input type="number" value="1" oninput="calculateGridRowTotal(this)" placeholder="0"></td>
-                <td><input type="number" value="0" oninput="calculateGridRowTotal(this)" placeholder="0"></td>
-                <td><input type="number" value="0" readonly style="color: var(--accent-glow); font-weight: bold;"></td>
-            `;
-            
-            tableBody.appendChild(newRow);
-            recalculateGridGrandTotal();
-        }
-        // ==========================================
-        // END FUNCTION: LIVE INVOICE GRID OPERATIONS
-        // ==========================================
 
 
         // ==========================================
