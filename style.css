@@ -325,7 +325,7 @@ body {
 /* === START OF STYLE: live-tap-input-field === */
 .live-tap-input-field {
     position: absolute;
-    background: #ffffff; /* سفید بیک گراؤنڈ */
+    background: #ffffff; /* سفید بیک گراؤنڈ تاکہ پیچھے کی لائنیں چھپ جائیں */
     border: 1px solid rgba(0, 122, 255, 0.4); 
     color: #000000;
     font-family: Arial, sans-serif;
@@ -335,7 +335,7 @@ body {
     margin: 0;
     z-index: 3100;
     text-align: right; /* نمبر دائیں طرف الائن */
-    width: 38px; /* چوڑائی بالکل فٹ */
+    width: 38px; /* کالم کے مطابق چوڑائی فکس */
     height: 11px;
     line-height: 11px;
     box-sizing: border-box;
@@ -347,6 +347,7 @@ body {
     background: #ffffcc; /* فوکس ہونے پر ہلکا پیلا */
 }
 /* === END OF STYLE: live-tap-input-field === */
+
 
 /* ==========================================================
    === END: DYNAMIC WORKING CANVAS WORKSPACE ===
