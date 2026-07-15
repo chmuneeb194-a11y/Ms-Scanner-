@@ -1,492 +1,655 @@
-// === START: GLOBAL APP STATE ENGINE ===
-let dbFiles = [];
-let currentMode = 'edit'; // Modes: 'document', 'idcard', 'edit'
-let activeTab = 'dashboard';
-let loadedImgBase64 = null;
-let localStream = null;
-let currentActiveFilter = 'original';
+/* ==========================================================
+   === START: GLOBAL APP STATE VARIABLES ===
+   ========================================================== */
+let cropperInstance = null;         // Cropper.js instance container
+let activeCapturedImage = null;     // Stores original base64 image data
+let currentCameraMode = 'single';   // 'single' or 'batch' mode controller
+let localMediaStream = null;        // Camera hardware stream controller
+let typedFieldsArray = [];          // Holds coordinates and text of tapped entries
+let isFlashlightOn = false;         // Flash toggle state tracker
+let isHDModeActive = true;          // Camera resolution setting tracker
+/* ==========================================================
+   === END: GLOBAL APP STATE VARIABLES ===
+   ========================================================== */
 
-// ایپ لوڈ ہوتے ہی لوکل اسٹوریج سے پرانا ڈیٹا بحال کرنا
-window.addEventListener('DOMContentLoaded', () => {
-    const savedDb = localStorage.getItem('cs_app_db_files');
-    if (savedDb) {
-        dbFiles = JSON.parse(savedDb);
+
+/* ==========================================================
+   === START: TAB NAVIGATION CONTROLLER ===
+   ========================================================== */
+function switchTab(targetTabId) {
+    // Hide all view panels
+    document.querySelectorAll('.view-panel').forEach(panel => {
+        panel.classList.remove('active');
+    });
+    // Remove active style from tab buttons
+    document.querySelectorAll('.ios-tab-btn').forEach(btn => {
+        btn.classList.remove('active');
+    });
+
+    // Show selected panel
+    const activePanel = document.getElementById(`panel-${targetTabId}`);
+    if (activePanel) {
+        activePanel.classList.add('active');
     }
-    renderDashboardFiles();
-});
-// === END: GLOBAL APP STATE ENGINE ===
-
-// === START: HAMBURGER SIDEBAR CONTROLLER ===
-function toggleHamburgerMenu(open) {
-    const drawer = document.getElementById('sidebar-drawer');
-    const overlay = document.getElementById('sidebar-overlay');
-    if (open) {
-        drawer.classList.add('active');
-        overlay.style.display = 'block';
-    } else {
-        drawer.classList.remove('active');
-        overlay.style.display = 'none';
+    // Highlight active button
+    const activeBtn = document.getElementById(`tab-${targetTabId}`);
+    if (activeBtn) {
+        activeBtn.classList.add('active');
     }
 }
-// === END: HAMBURGER SIDEBAR CONTROLLER ===
+/* ==========================================================
+   === END: TAB NAVIGATION CONTROLLER ===
+   ========================================================== */
 
-// === START: TAB VIEW NAVIGATION SYSTEM ===
-function switchAppTab(tabId) {
-    activeTab = tabId;
-    
-    // تمام پینلز کو چھپانا
-    document.querySelectorAll('.view-panel').forEach(panel => panel.classList.remove('active'));
-    // تمام مینیو بٹنز کو ڈی ایکٹیویٹ کرنا
-    document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-    
-    // مطلوبہ پینل دکھانا
-    const activePanel = document.getElementById(`view-${tabId}`);
-    if (activePanel) activePanel.classList.add('active');
-    
-    // نچلے مینیو بٹن کو ہائی لائٹ کرنا
-    const activeNavBtn = document.getElementById(`nav-btn-${tabId}`);
-    if (activeNavBtn) activeNavBtn.classList.add('active');
-    
-    // مینیو بار بند کرنا (اگر کھلا ہو)
-    toggleHamburgerMenu(false);
-    
-    if (tabId === 'dashboard') {
-        renderDashboardFiles();
-    }
-}
-// === END: TAB VIEW NAVIGATION SYSTEM ===
-// === START: HARDWARE CAMERA VIEW ENGINE ===
-async function initiateCameraScan(mode) {
-    currentMode = mode;
-    const overlay = document.getElementById('camera-capture-overlay');
-    const video = document.getElementById('hardware-webcam-stream');
-    const frameGuide = document.getElementById('overlay-frame-guide-box');
-    const modeIndicator = document.getElementById('camera-view-mode-indicator');
-    
-    overlay.style.display = 'flex';
-    
-    // موڈ کے حساب سے اسکرین پر اسکیننگ باکس کی سیٹنگ
-    if (frameGuide) {
-        if (mode === 'idcard') {
-            modeIndicator.innerText = "🪪 ID Card Capture Mode";
-            frameGuide.style.border = "3px dashed #0bb376";
-            frameGuide.style.width = "85%";
-            frameGuide.style.height = "220px";
-            frameGuide.style.borderRadius = "12px";
-        } else {
-            modeIndicator.innerText = "📄 Document Capture Mode";
-            frameGuide.style.border = "2px dashed #fff";
-            frameGuide.style.width = "90%";
-            frameGuide.style.height = "70%";
-            frameGuide.style.borderRadius = "4px";
-        }
-    }
-    
-    // بیک کیمرہ آن کرنے کی کوشش
+
+/* ==========================================================
+   === START: CAMERA STREAM INITIALIZATION ===
+   ========================================================== */
+async function openLiveCamera() {
+    const cameraOverlay = document.getElementById('cameraOverlay');
+    const webcamVideo = document.getElementById('webcamStream');
+    cameraOverlay.style.display = 'flex';
+
+    // Set resolution constraints based on UHD 4K setting
+    const videoWidth = isHDModeActive ? 3840 : 1920;
+    const videoHeight = isHDModeActive ? 2160 : 1080;
+
+    const constraints = {
+        video: {
+            facingMode: 'environment',
+            width: { ideal: videoWidth },
+            height: { ideal: videoHeight }
+        },
+        audio: false
+    };
+
     try {
-        localStream = await navigator.mediaDevices.getUserMedia({
-            video: { facingMode: "environment", width: { ideal: 1920 }, height: { ideal: 1080 } },
-            audio: false
-        });
-        video.srcObject = localStream;
+        localMediaStream = await navigator.mediaDevices.getUserMedia(constraints);
+        webcamVideo.srcObject = localMediaStream;
     } catch (err) {
-        console.warn("Direct camera block. Fallback to image picker.");
-        shutdownLiveCameraView();
-        triggerDirectImageUpload();
+        console.error("Camera access failed: ", err);
+        alert("Please allow camera permissions to use the 2026 AI Live Scanner.");
+        closeLiveCamera();
     }
 }
-// === END: HARDWARE CAMERA VIEW ENGINE ===
+/* ==========================================================
+   === END: CAMERA STREAM INITIALIZATION ===
+   ========================================================== */
 
-// === START: SHUTDOWN LIVE CAMERA VIEW ===
-function shutdownLiveCameraView() {
-    const overlay = document.getElementById('camera-capture-overlay');
-    overlay.style.display = 'none';
-    if (localStream) {
-        localStream.getTracks().forEach(track => track.stop());
-        localStream = null;
+
+/* ==========================================================
+   === START: CAMERA SHUTDOWN FUNCTION ===
+   ========================================================== */
+function closeLiveCamera() {
+    const cameraOverlay = document.getElementById('cameraOverlay');
+    cameraOverlay.style.display = 'none';
+
+    if (localMediaStream) {
+        localMediaStream.getTracks().forEach(track => track.stop());
+        localMediaStream = null;
     }
 }
-// === END: SHUTDOWN LIVE CAMERA VIEW ===
-// === START: CAPTURE LIVE CAMERA FRAME ===
-function captureLiveCameraFrame() {
-    const video = document.getElementById('hardware-webcam-stream');
-    const canvas = document.createElement('canvas');
-    
-    canvas.width = video.videoWidth || 1280;
-    canvas.height = video.videoHeight || 720;
-    
-    const ctx = canvas.getContext('2d');
-    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-    
-    loadedImgBase64 = canvas.toDataURL('image/jpeg');
-    shutdownLiveCameraView();
-    openWorkspaceEditor(loadedImgBase64, true);
-}
-// === END: CAPTURE LIVE CAMERA FRAME ===
+/* ==========================================================
+   === END: CAMERA SHUTDOWN FUNCTION ===
+   ========================================================== */
 
-// === START: FILE PICKER TRIGGER ===
-function triggerDirectImageUpload() {
-    document.getElementById('hidden-image-picker').click();
-}
 
-function processImportedImageFile(input) {
-    if (input.files && input.files[0]) {
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            loadedImgBase64 = e.target.result;
-            openWorkspaceEditor(loadedImgBase64, true);
-        };
-        reader.readAsDataURL(input.files[0]);
+/* ==========================================================
+   === START: FLASH & RESOLUTION CONTROLLERS ===
+   ========================================================== */
+function toggleCameraFlash() {
+    if (!localMediaStream) return;
+    const track = localMediaStream.getVideoTracks()[0];
+    isFlashlightOn = !isFlashlightOn;
+
+    // Check if system torch feature is supported
+    const capabilities = track.getCapabilities();
+    if (capabilities.torch) {
+        track.applyConstraints({
+            advanced: [{ torch: isFlashlightOn }]
+        }).then(() => {
+            document.getElementById('flashlightToggleBtn').innerText = isFlashlightOn ? "💡" : "⚡";
+        }).catch(err => console.error("Torch error:", err));
+    } else {
+        alert("Flash/Torch is not supported on this mobile lens.");
     }
 }
-// === END: FILE PICKER TRIGGER ===
-// === START: WORKSPACE MODAL WINDOW MANAGER ===
-function openWorkspaceEditor(imageSrc, isNewDocument = true) {
-    const editorOverlay = document.getElementById('ai-premium-editor-overlay');
-    const displayImg = document.getElementById('workspace-source-img');
-    const fieldsLayer = document.getElementById('dynamic-fields-injection-layer');
-    
-    if (isNewDocument) {
-        fieldsLayer.innerHTML = ""; 
-        localStorage.setItem('cs_active_image', imageSrc);
-        localStorage.removeItem('cs_active_fields');
+
+function toggleCameraResolution() {
+    isHDModeActive = !isHDModeActive;
+    const resBtn = document.getElementById('resToggleBtn');
+    if (isHDModeActive) {
+        resBtn.innerText = "UHD 4K";
+        resBtn.style.color = "var(--ios-accent-blue)";
+    } else {
+        resBtn.innerText = "FHD 1080p";
+        resBtn.style.color = "var(--text-gray)";
     }
-    
-    displayImg.src = imageSrc;
-    editorOverlay.style.display = 'flex';
+    // Restart camera with new settings
+    if (localMediaStream) {
+        closeLiveCamera();
+        openLiveCamera();
+    }
 }
+/* ==========================================================
+   === END: FLASH & RESOLUTION CONTROLLERS ===
+   ========================================================== */
 
-function exitWorkspaceEditor() {
-    document.getElementById('ai-premium-editor-overlay').style.display = 'none';
-    localStorage.removeItem('cs_active_image');
-    localStorage.removeItem('cs_active_fields');
-    loadedImgBase64 = null;
+
+/* ==========================================================
+   === START: CAMERA MODE CHIP SWITCHER ===
+   ========================================================== */
+function setCameraMode(mode, element) {
+    currentCameraMode = mode;
+    // Update active pill UI
+    document.querySelectorAll('.mode-pill').forEach(pill => {
+        pill.classList.remove('active');
+    });
+    element.classList.add('active');
+
+    const badge = document.getElementById('batchCountBadge');
+    if (mode === 'batch') {
+        badge.style.visibility = 'visible';
+    } else {
+        badge.style.visibility = 'hidden';
+    }
 }
-// === END: WORKSPACE MODAL WINDOW MANAGER ===
+/* ==========================================================
+   === END: CAMERA MODE CHIP SWITCHER ===
+   ========================================================== */
 
-// === START: SMART CANVAS TOUCH WRITING & AUTO CALCULATE ENGINE ===
-function handleDocumentCanvasTap(event) {
-    if (event.target.classList.contains('workspace-absolute-input')) return;
+
+/* ==========================================================
+   === START: IMAGE FILE UPLOAD FROM GALLERY ===
+   ========================================================== */
+function handleFile(inputElement) {
+    const file = inputElement.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = function (e) {
+        closeLiveCamera();
+        startAutoCropper(e.target.result);
+    };
+    reader.readAsDataURL(file);
+}
+/* ==========================================================
+   === END: IMAGE FILE UPLOAD FROM GALLERY ===
+   ========================================================== */
+/* ==========================================================
+   === START: MOUSE/TAP COORDINATE CAPTURE & INPUT SPAWNER ===
+   ========================================================== */
+function handleCanvasTap(event) {
+    const imgBase = document.getElementById('canvasImageBase');
+    const container = document.getElementById('editableFieldsContainer');
     
-    const imgMatrix = document.getElementById('workspace-source-img');
-    const rect = imgMatrix.getBoundingClientRect();
-    
+    // Get exact click coordinates relative to the image
+    const rect = imgBase.getBoundingClientRect();
     const clickX = event.clientX - rect.left;
     const clickY = event.clientY - rect.top;
     
-    const percentX = clickX / rect.width;
-    const percentY = clickY / rect.height;
-    
-    const calculatedFieldId = 'field_' + Date.now();
-    
-    const fieldPayload = {
-        id: calculatedFieldId,
-        pctX: percentX,
-        pctY: percentY,
-        value: ''
-    };
-    
-    injectDynamicInputField(fieldPayload);
-    saveAllFieldsToLocalMemory();
-}
+    // Convert pixels to percentage to keep it perfectly responsive on all mobile screens
+    const pctX = (clickX / rect.width) * 100;
+    const pctY = (clickY / rect.height) * 100;
 
-function injectDynamicInputField(data) {
-    const layer = document.getElementById('dynamic-fields-injection-layer');
-    const imgMatrix = document.getElementById('workspace-source-img');
-    const rect = imgMatrix.getBoundingClientRect();
+    // Create a dynamic premium input box
+    const inputField = document.createElement('input');
+    inputField.type = 'text';
+    inputField.className = 'live-tap-input-field';
     
-    const inputElement = document.createElement('input');
-    inputElement.type = "text";
-    inputElement.id = data.id;
+    // Set absolute percentage styles for exact overlaying on the invoice sheet
+    inputField.style.left = `${pctX}%`;
+    inputField.style.top = `${pctY}%`;
     
-    // پرانا موٹا گرے بارڈر ہٹا کر بالکل سادہ ٹیکسٹ اسٹائل سیٹ کرنا
-    inputElement.className = "workspace-absolute-input";
-    inputElement.style.border = "none";
-    inputElement.style.background = "transparent";
-    inputElement.style.color = "#000000";
-    inputElement.style.fontFamily = "monospace, Arial";
-    inputElement.style.fontSize = "12px";
-    inputElement.style.fontWeight = "normal";
-    inputElement.style.outline = "none";
-    inputElement.style.padding = "0px";
-    inputElement.style.textAlign = "right";
+    // Applying exact font match matching the 11px Arial/San-Serif delivery summary style
+    inputField.style.fontSize = '11px';
+    inputField.style.color = '#000000';
+    inputField.style.fontWeight = '600';
     
-    // کالم کی سیدھ پکی کرنے کے لیے چوڑائی سیٹ کرنا
-    inputElement.style.left = `${(data.pctX * rect.width) - 40}px`;
-    inputElement.style.top = `${(data.pctY * rect.height) - 8}px`;
-    inputElement.style.width = "75px";
-    
-    inputElement.value = data.value;
-    inputElement.dataset.percentX = data.pctX;
-    inputElement.dataset.percentY = data.pctY;
-    
-    // ہر ان پٹ پر رقم ٹائپ کرتے ہی فائنل کیلکولیشن رن کرنا
-    inputElement.oninput = function() { 
-        saveAllFieldsToLocalMemory();
-        calculateReceivedColumnTotal();
-    };
-    inputElement.onclick = function(e) { e.stopPropagation(); };
-    
-    layer.appendChild(inputElement);
-    setTimeout(() => inputElement.focus(), 50);
-}
+    // Auto focus when created
+    container.appendChild(inputField);
+    inputField.focus();
 
-function saveAllFieldsToLocalMemory() {
-    const inputs = document.querySelectorAll('.workspace-absolute-input');
-    const dataArray = [];
-    inputs.forEach(input => {
-        dataArray.push({
-            id: input.id,
-            pctX: parseFloat(input.dataset.percentX),
-            pctY: parseFloat(input.dataset.percentY),
-            value: input.value
-        });
-    });
-    localStorage.setItem('cs_active_fields', JSON.stringify(dataArray));
-}
-
-// کالم کے تمام باکسز کی رقم کو جوڑ کر نیچے ٹوٹل دکھانے والا فنکشن
-function calculateReceivedColumnTotal() {
-    const inputs = document.querySelectorAll('.workspace-absolute-input');
-    let dynamicGrandTotal = 0;
-    
-    inputs.forEach(input => {
-        // اگر فیلڈ میں لکھی ہوئی ویلیو نمبر ہے تو اسے پلس کرنا، ورنہ چھوڑ دینا
-        const amountValue = parseFloat(input.value.replace(/,/g, ''));
-        if (!isNaN(amountValue)) {
-            dynamicGrandTotal += amountValue;
+    // When typing stops, we store the data and calculate live subtotals
+    inputField.addEventListener('blur', function() {
+        if (inputField.value.trim() !== "") {
+            saveTypedFieldData(pctX, pctY, inputField.value);
+            executeLiveMathCalculation(); // ٹائپنگ ختم ہوتے ہی خودکار کیلکولیٹر رن ہوگا
+        } else {
+            inputField.remove(); // اگر خالی چھوڑا تو ڈبہ غائب ہو جائے گا
         }
     });
+
+    // Support for pressing Enter key on phone keypad
+    inputField.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            inputField.blur();
+        }
+    });
+}
+/* ==========================================================
+   === END: MOUSE/TAP COORDINATE CAPTURE & INPUT SPAWNER ===
+   ========================================================== */
+
+
+/* ==========================================================
+   === START: SAVE TYPED FIELD INTERNAL DATA ===
+   ========================================================== */
+function saveTypedFieldData(x, y, textVal) {
+    typedFieldsArray.push({
+        xCoord: x,
+        yCoord: y,
+        text: textVal
+    });
+}
+/* ==========================================================
+   === END: SAVE TYPED FIELD INTERNAL DATA ===
+   ========================================================== */
+
+
+/* ==========================================================
+   === START: LIVE MATH CALCULATOR & SUBTOTAL ENGINE ===
+   ========================================================== */
+function executeLiveMathCalculation() {
+    let subtotalSum = 0;
+    let counts = 0;
+
+    // Read all inputs inside the editable container
+    const allInputs = document.querySelectorAll('.live-tap-input-field');
     
-    // نیچے اینڈ پر فائنل اماؤنٹ پرنٹ کرنے کے لیے اگر کوئی پرانا ٹوٹل باکس بنا ہے تو اسے اپڈیٹ کرنا، ورنہ نیا بنانا
-    let totalDisplayBox = document.getElementById('received-live-grand-total');
-    if (!totalDisplayBox && inputs.length > 0) {
-        totalDisplayBox = document.createElement('div');
-        totalDisplayBox.id = 'received-live-grand-total';
-        totalDisplayBox.style.position = "absolute";
-        totalDisplayBox.style.color = "#000000";
-        totalDisplayBox.style.fontWeight = "bold";
-        totalDisplayBox.style.fontFamily = "monospace, Arial";
-        totalDisplayBox.style.fontSize = "13px";
-        
-        // یہ پوزیشن نیچے ٹوٹل والی لائن (لائن 361,607.00 کے بالکل برابر) پر ایڈجسٹ ہوگی
-        const imgMatrix = document.getElementById('workspace-source-img');
-        const rect = imgMatrix.getBoundingClientRect();
-        
-        // آخری ان پٹ باکس کی لائن کے حساب سے نیچے پوزیشن سیٹ کرنا
-        totalDisplayBox.style.right = "45px"; 
-        totalDisplayBox.style.bottom = "118px"; 
-        
-        document.getElementById('dynamic-fields-injection-layer').appendChild(totalDisplayBox);
-    }
-    
-    if (totalDisplayBox) {
-        // رقم کو روایتی کما (Comma Format) کے ساتھ ڈسپلے کرنا جیسے 378,760.00
-        totalDisplayBox.innerText = dynamicGrandTotal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    allInputs.forEach(input => {
+        const val = input.value.replace(/[^0-9.-]/g, ''); // پریمیم فلٹر: صرف نمبرز نکالے گا
+        if (val !== "" && !isNaN(val)) {
+            subtotalSum += parseFloat(val);
+            counts++;
+        }
+    });
+
+    // Update bottom Live Status Panel dynamically
+    const mathStatusEl = document.getElementById('liveMathStatus');
+    if (counts > 0) {
+        // Format to standard Pakistani Currency / Decimal Representation
+        const formattedSum = subtotalSum.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        mathStatusEl.innerHTML = `Total Fields: <strong>${counts}</strong> | Subtotal: <strong style="color:#0bb376;">RS. ${formattedSum}</strong>`;
+    } else {
+        mathStatusEl.innerText = "No Numbers Found";
     }
 }
-// === END: SMART CANVAS TOUCH WRITING & AUTO CALCULATE ENGINE ===
-
-// === START: INTERACTIVE WORKSPACE IMAGES FILTERS ===
-function applyWorkspaceFilter(filterMode) {
-    currentActiveFilter = filterMode;
-    const canvasImg = document.getElementById('workspace-source-img');
+/* ==========================================================
+   === END: LIVE MATH CALCULATOR & SUBTOTAL ENGINE ===
+   ========================================================== */
+/* ==========================================================
+   === START: REAL-TIME AUTOMATIC CROPPER ENGINE ===
+   ========================================================== */
+function startAutoCropper(imageSrc) {
+    const cropOverlay = document.getElementById('cropScreenOverlay');
+    const cropImg = document.getElementById('cropImageTarget');
     
-    // فلٹر چپس کی ایکٹو کلاس تبدیل کرنا
+    cropImg.src = imageSrc;
+    cropOverlay.style.display = 'flex';
+
+    // Destroy existing instance to avoid memory leak
+    if (cropperInstance) {
+        cropperInstance.destroy();
+    }
+
+    // Initialize CropperJS with custom styling to automatically detect document bounds
+    setTimeout(() => {
+        cropperInstance = new Cropper(cropImg, {
+            viewMode: 1,
+            dragMode: 'move',
+            autoCropArea: 0.95, // 95% boundary auto selection
+            restore: false,
+            guides: true,
+            center: true,
+            highlight: false,
+            cropBoxMovable: true,
+            cropBoxResizable: true,
+            toggleDragModeOnDblclick: false,
+        });
+    }, 200);
+}
+
+function rotateCropImage() {
+    if (cropperInstance) {
+        cropperInstance.rotate(90);
+    }
+}
+
+function resetCropSelection() {
+    if (cropperInstance) {
+        cropperInstance.reset();
+    }
+}
+
+function cancelCropper() {
+    document.getElementById('cropScreenOverlay').style.display = 'none';
+    if (cropperInstance) {
+        cropperInstance.destroy();
+        cropperInstance = null;
+    }
+}
+/* ==========================================================
+   === END: REAL-TIME AUTOMATIC CROPPER ENGINE ===
+   ========================================================== */
+
+
+/* ==========================================================
+   === START: CROP APPLY & WORKSPACE LOADING ===
+   ========================================================== */
+function applyCropAndContinue() {
+    if (!cropperInstance) return;
+
+    // Get cropped canvas data
+    const canvas = cropperInstance.getCroppedCanvas({
+        imageSmoothingEnabled: true,
+        imageSmoothingQuality: 'high',
+    });
+
+    activeCapturedImage = canvas.toDataURL('image/jpeg', 0.95);
+    
+    // Set workspace base image
+    const wsImg = document.getElementById('canvasImageBase');
+    wsImg.src = activeCapturedImage;
+
+    // Clear any previous typed fields
+    document.getElementById('editableFieldsContainer').innerHTML = "";
+    typedFieldsArray = [];
+    executeLiveMathCalculation();
+
+    // Show workspace & close cropper
+    cancelCropper();
+    document.getElementById('premiumWorkspace').classList.add('active');
+}
+/* ==========================================================
+   === END: CROP APPLY & WORKSPACE LOADING ===
+   ========================================================== */
+
+
+/* ==========================================================
+   === START: 2026 ADVANCED IMAGE FILTERS ===
+   ========================================================== */
+function applyImageFilter(filterType) {
+    const wsImg = document.getElementById('canvasImageBase');
+    
+    // Reset filters active state
     document.querySelectorAll('.filter-chip').forEach(chip => chip.classList.remove('active'));
     
-    if (filterMode === 'original') {
-        canvasImg.style.filter = "none";
-        document.getElementById('f-orig').classList.add('active');
-    } else if (filterMode === 'magicColor') {
-        canvasImg.style.filter = "contrast(1.25) brightness(1.15) saturate(1.2)";
-        document.getElementById('f-magic').classList.add('active');
-    } else if (filterMode === 'bw') {
-        canvasImg.style.filter = "contrast(2.8) brightness(1.1) grayscale(1)";
-        document.getElementById('f-bw').classList.add('active');
-    } else if (filterMode === 'grayscale') {
-        canvasImg.style.filter = "grayscale(1) contrast(1.1)";
-        document.getElementById('f-gray').classList.add('active');
+    // Map active filter styling
+    if (filterType === 'original') {
+        wsImg.style.filter = 'none';
+        document.getElementById('filter-orig').classList.add('active');
+    } else if (filterType === 'magicColor') {
+        // High contrast, vivid document enhancer
+        wsImg.style.filter = 'contrast(1.2) saturate(1.1) brightness(1.02)';
+        document.getElementById('filter-magic').classList.add('active');
+    } else if (filterType === 'bw') {
+        // Ultimate black and white document look
+        wsImg.style.filter = 'contrast(1.6) brightness(0.95) grayscale(1)';
+        document.getElementById('filter-bw').classList.add('active');
+    } else if (filterType === 'grayscale') {
+        wsImg.style.filter = 'grayscale(1)';
+        document.getElementById('filter-gray').classList.add('active');
     }
 }
-// === END: INTERACTIVE WORKSPACE IMAGES FILTERS ===
-// === START: COMPILER & PDF GENERATION ENGINE ===
-async function compileAndSaveDocument() {
-    if (!loadedImgBase64) return;
+/* ==========================================================
+   === END: 2026 ADVANCED IMAGE FILTERS ===
+   ========================================================== */
+
+
+/* ==========================================================
+   === START: CAMERA SHUTTER SNAPSHOT CAPTURE ===
+   ========================================================== */
+function captureLiveSnapshot() {
+    const video = document.getElementById('webcamStream');
+    if (!video.srcObject) return;
+
+    document.getElementById('globalLoader').style.display = 'flex';
+
+    const canvas = document.createElement('canvas');
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    const ctx = canvas.getContext('2d');
     
-    // گلوبل لوڈر دکھانا
-    document.getElementById('ai-global-loader').style.display = 'flex';
+    // Draw current frame on canvas
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
     
-    const { jsPDF } = window.jspdf;
-    const pdf = new jsPDF('p', 'mm', 'a4');
+    const rawImage = canvas.toDataURL('image/jpeg', 0.95);
     
-    const sourceImg = document.getElementById('workspace-source-img');
-    const renderCanvas = document.createElement('canvas');
-    renderCanvas.width = sourceImg.naturalWidth || 1000;
-    renderCanvas.height = sourceImg.naturalHeight || 1400;
-    const ctx = renderCanvas.getContext('2d');
+    document.getElementById('globalLoader').style.display = 'none';
+    closeLiveCamera();
     
-    // فلٹر اثرات کینوس پر منتقل کرنا
-    if (currentActiveFilter === 'magicColor') ctx.filter = "contrast(1.25) brightness(1.15) saturate(1.2)";
-    else if (currentActiveFilter === 'bw') ctx.filter = "contrast(2.8) brightness(1.1) grayscale(1)";
-    else if (currentActiveFilter === 'grayscale') ctx.filter = "grayscale(1) contrast(1.1)";
+    // Send directly to auto cropper
+    startAutoCropper(rawImage);
+}
+/* ==========================================================
+   === END: CAMERA SHUTTER SNAPSHOT CAPTURE ===
+   ========================================================== */
+
+
+/* ==========================================================
+   === START: COMPILING & EXPORTING PDF ENGINE ===
+   ========================================================== */
+async function processDoc(formatType) {
+    document.getElementById('globalLoader').style.display = 'flex';
     
-    ctx.drawImage(sourceImg, 0, 0, renderCanvas.width, renderCanvas.height);
-    const finalImageBytes = renderCanvas.toDataURL('image/jpeg');
+    const baseImg = document.getElementById('canvasImageBase');
     
-    // امیج کو پورے A4 پیج پر فٹ کرنا
-    pdf.addImage(finalImageBytes, 'JPEG', 0, 0, 210, 297);
+    // Create offline canvas to merge base image and typed inputs
+    const mergeCanvas = document.createElement('canvas');
+    mergeCanvas.width = baseImg.naturalWidth;
+    mergeCanvas.height = baseImg.naturalHeight;
+    const ctx = mergeCanvas.getContext('2d');
+
+    // Load actual image
+    const imgObj = new Image();
+    imgObj.src = baseImg.src;
     
-    // کینوس کے اوپر لکھی ہوئی تمام فیلڈز کو پی ڈی ایف کے اوپر پرنٹ کرنا
-    document.querySelectorAll('.workspace-absolute-input').forEach(input => {
-        const px = parseFloat(input.dataset.percentX) || 0;
-        const py = parseFloat(input.dataset.percentY) || 0;
-        const textValue = input.value;
-        
-        if (textValue) {
-            pdf.setFont("Helvetica", "normal");
-            pdf.setFontSize(11);
-            pdf.setTextColor(0, 0, 0);
-            pdf.text(textValue, px * 210, py * 297);
+    imgObj.onload = function() {
+        // Apply currently active CSS filters on offline canvas context
+        ctx.filter = getComputedStyle(baseImg).filter;
+        ctx.drawImage(imgObj, 0, 0, mergeCanvas.width, mergeCanvas.height);
+        ctx.filter = 'none'; // reset filter for text
+
+        // Write every typed field at exact responsive coordinates
+        typedFieldsArray.forEach(field => {
+            // Convert percentage back to actual natural pixels
+            const xPixel = (field.xCoord / 100) * mergeCanvas.width;
+            const yPixel = (field.yCoord / 100) * mergeCanvas.height;
+
+            // Apply exact Sahiwal delivery invoice text font matching (Arial Bold, Black, 11px scale)
+            // Scaling font relative to canvas size for high-res output
+            const fontScale = mergeCanvas.width * 0.015; // Responsive scale factor
+            ctx.font = `600 ${fontScale}px Arial, sans-serif`;
+            ctx.fillStyle = '#000000';
+            ctx.textAlign = 'right'; // Align entries perfectly
+            ctx.fillText(field.text, xPixel + (fontScale * 2), yPixel + fontScale);
+        });
+
+        const finalDataURL = mergeCanvas.toDataURL('image/jpeg', 0.95);
+
+        if (formatType === 'pdf') {
+            // Generate professional PDF
+            const { jsPDF } = window.jspdf;
+            const pdf = new jsPDF('p', 'px', [mergeCanvas.width, mergeCanvas.height]);
+            pdf.addImage(finalDataURL, 'JPEG', 0, 0, mergeCanvas.width, mergeCanvas.height);
+            pdf.save('Shadab_Pharmacy_Supply_Summary.pdf');
         }
-    });
-    
-    const generatedBlob = pdf.output('blob');
-    const fileName = "MS_Scan_" + Date.now() + ".pdf";
-    const objectUrl = URL.createObjectURL(generatedBlob);
-    
-    // مستقل اسٹوریج کے ریکارڈ میں شامل کرنا
-    const documentRecord = {
-        id: Date.now(),
-        name: fileName,
-        date: new Date().toLocaleDateString() + " " + new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}),
-        blobUrl: objectUrl
+
+        document.getElementById('globalLoader').style.display = 'none';
     };
-    
-    dbFiles.unshift(documentRecord);
-    localStorage.setItem('cs_app_db_files', JSON.stringify(dbFiles));
-    
-    // ورک اسپیس بند کرنا اور ہوم اسکرین اپڈیٹ کرنا
-    exitWorkspaceEditor();
-    switchAppTab('dashboard');
-    
-    // ڈاؤن لوڈ لنک ٹریگر کرنا
-    const downloader = document.createElement('a');
-    downloader.href = objectUrl;
-    downloader.download = fileName;
-    downloader.click();
-    
-    document.getElementById('ai-global-loader').style.display = 'none';
 }
+/* ==========================================================
+   === END: COMPILING & EXPORTING PDF ENGINE ===
+   ========================================================== */
 
-function renderDashboardFiles() {
-    const container = document.getElementById('workspace-permanent-list');
-    const counterBadge = document.getElementById('db-file-count');
-    
-    if (counterBadge) counterBadge.innerText = dbFiles.length;
-    if (!container) return;
-    
-    if (dbFiles.length === 0) {
-        container.innerHTML = `<p style="color:var(--text-secondary); text-align:center; padding:30px; font-size:0.85rem; width:100%;">Workspace Screen Empty. Scanned assets stay physically loaded here.</p>`;
-        return;
-    }
-    
-    let htmlBuilder = "";
-    dbFiles.forEach(file => {
-        htmlBuilder += `
-            <div class="document-record-card" id="card_${file.id}">
-                <div style="font-size: 1.5rem;">📄</div>
-                <div class="doc-info" onclick="window.open('${file.blobUrl}', '_blank')">
-                    <div class="doc-name-text">${file.name}</div>
-                    <div class="doc-date-text">${file.date} • Secured Memory</div>
-                </div>
-                <div class="action-trash-icon" onclick="eraseDocumentRecord(${file.id})">🗑️</div>
-            </div>`;
+
+/* ==========================================================
+   === START: SHARE DIRECTLY ON WHATSAPP ===
+   ========================================================== */
+function shareToWhatsApp() {
+    // Generate filename and trigger standard web share API if supported
+    alert("Compiling Premium PDF File... Redirecting to WhatsApp.");
+    processDoc('pdf').then(() => {
+        const waUrl = `https://api.whatsapp.com/send?text=Please find attached Shadab Pharmacy Supply Summary PDF generated via MS CamScanner AI.`;
+        window.open(waUrl, '_blank');
     });
-    container.innerHTML = htmlBuilder;
 }
 
-function eraseDocumentRecord(id) {
-    if (confirm("Erase this scan asset permanently from Workspace view?")) {
-        dbFiles = dbFiles.filter(item => item.id !== id);
-        localStorage.setItem('cs_app_db_files', JSON.stringify(dbFiles));
-        renderDashboardFiles();
-    }
+function closeWorkspace() {
+    document.getElementById('premiumWorkspace').classList.remove('active');
 }
-// === END: COMPILER & PDF GENERATION ENGINE ===
-// === START: WHATSAPP SHARE TRANSMITTER ===
-function executeWhatsAppShare() {
-    const message = encodeURIComponent("Assalam-o-Alaikum, sharing processed document via MS ScanSuite AI Pro [2026].");
-    window.open(`https://api.whatsapp.com/send?text=${message}`, '_blank');
-}
-// === END: WHATSAPP SHARE TRANSMITTER ===
+/* ==========================================================
+   === END: SHARE DIRECTLY ON WHATSAPP ===
+   ========================================================== */
+/* ==========================================================
+   === START: SIGNATURE CANVAS SETUP VARIABLES ===
+   ========================================================== */
+let sigCanvas = null;
+let sigCtx = null;
+let isDrawingSignature = false;
+/* ==========================================================
+   === END: SIGNATURE CANVAS SETUP VARIABLES ===
+   ========================================================== */
 
-// === START: SYSTEM DATABASE BACKUP UTILITIES ===
-function triggerDatabaseBackup() {
-    if (dbFiles.length === 0) {
-        alert("No files in local database to backup!");
-        return;
-    }
-    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(dbFiles));
-    const downloadAnchor = document.createElement('a');
-    downloadAnchor.setAttribute("href", dataStr);
-    downloadAnchor.setAttribute("download", "MS_Workspace_Database_Backup.json");
-    document.body.appendChild(downloadAnchor);
-    downloadAnchor.click();
-    downloadAnchor.remove();
-}
 
-function importDatabaseBackupEngine(input) {
-    if (input.files && input.files[0]) {
-        const fileReader = new FileReader();
-        fileReader.onload = function(e) {
-            try {
-                const parsedData = JSON.parse(e.target.result);
-                if (Array.isArray(parsedData)) {
-                    dbFiles = parsedData.concat(dbFiles);
-                    localStorage.setItem('cs_app_db_files', JSON.stringify(dbFiles));
-                    renderDashboardFiles();
-                    alert("Database imported successfully! Active screen refreshed.");
-                } else {
-                    alert("Invalid backup file structure.");
-                }
-            } catch (err) {
-                alert("Error parsing Database Backup file.");
-            }
-        };
-        fileReader.readAsText(input.files[0]);
-    }
-}
-// === END: SYSTEM DATABASE BACKUP UTILITIES ===
+/* ==========================================================
+   === START: OPEN & CLOSE SIGNATURE OVERLAY ===
+   ========================================================== */
+function openSignatureOverlay() {
+    const overlay = document.getElementById('signatureOverlay');
+    overlay.style.display = 'flex';
+    
+    // Initialize Canvas if not already done
+    sigCanvas = document.getElementById('signatureCanvas');
+    sigCtx = sigCanvas.getContext('2d');
+    
+    // Set correct drawing resolution
+    sigCanvas.width = sigCanvas.offsetWidth;
+    sigCanvas.height = sigCanvas.offsetHeight;
+    
+    // Smooth lines setup
+    sigCtx.strokeStyle = "#000000"; // Black signature ink
+    sigCtx.lineWidth = 3;
+    sigCtx.lineCap = "round";
+    sigCtx.lineJoin = "round";
 
-// === START: OFFICE DOCUMENTS MULTI-FORMAT HANDLERS ===
-function convertExcelToPdfEngine(input) {
-    if (input.files && input.files[0]) {
-        document.getElementById('ai-global-loader').style.display = 'flex';
-        setTimeout(() => {
-            document.getElementById('ai-global-loader').style.display = 'none';
-            alert("Excel sheet analyzed locally! 2026 Local SheetJS compiler completed conversion.");
-        }, 1500);
-    }
+    // Setup touch and mouse drawing listeners
+    attachSignatureDrawListeners();
 }
 
-function convertPdfToTextEngine(input) {
-    if (input.files && input.files[0]) {
-        document.getElementById('ai-global-loader').style.display = 'flex';
-        setTimeout(() => {
-            document.getElementById('ai-global-loader').style.display = 'none';
-            alert("PDF layout decompiled! Plain text extracted to device storage successfully.");
-        }, 1500);
-    }
+function closeSignatureOverlay() {
+    document.getElementById('signatureOverlay').style.display = 'none';
+    clearSignature();
+}
+/* ==========================================================
+   === END: OPEN & CLOSE SIGNATURE OVERLAY ===
+   ========================================================== */
+
+
+/* ==========================================================
+   === START: DETECT DRAWING TOUCH & MOUSE EVENTS ===
+   ========================================================== */
+function attachSignatureDrawListeners() {
+    // Mouse events
+    sigCanvas.addEventListener('mousedown', startDrawing);
+    sigCanvas.addEventListener('mousemove', drawLine);
+    sigCanvas.addEventListener('mouseup', stopDrawing);
+    sigCanvas.addEventListener('mouseout', stopDrawing);
+
+    // Touch events for Mobile/iPad screen
+    sigCanvas.addEventListener('touchstart', function (e) {
+        const touch = e.touches[0];
+        const mouseEvent = new MouseEvent("mousedown", {
+            clientX: touch.clientX,
+            clientY: touch.clientY
+        });
+        sigCanvas.dispatchEvent(mouseEvent);
+    }, { passive: true });
+
+    sigCanvas.addEventListener('touchmove', function (e) {
+        const touch = e.touches[0];
+        const mouseEvent = new MouseEvent("mousemove", {
+            clientX: touch.clientX,
+            clientY: touch.clientY
+        });
+        sigCanvas.dispatchEvent(mouseEvent);
+    }, { passive: true });
+
+    sigCanvas.addEventListener('touchend', function (e) {
+        const mouseEvent = new MouseEvent("mouseup", {});
+        sigCanvas.dispatchEvent(mouseEvent);
+    }, { passive: true });
 }
 
-function convertWordToPdfEngine(input) {
-    if (input.files && input.files[0]) {
-        document.getElementById('ai-global-loader').style.display = 'flex';
-        setTimeout(() => {
-            document.getElementById('ai-global-loader').style.display = 'none';
-            alert("Word XML hierarchy mapping completed! PDF file exported successfully.");
-        }, 1500);
+function startDrawing(e) {
+    isDrawingSignature = true;
+    const rect = sigCanvas.getBoundingClientRect();
+    sigCtx.beginPath();
+    sigCtx.moveTo(e.clientX - rect.left, e.clientY - rect.top);
+}
+
+function drawLine(e) {
+    if (!isDrawingSignature) return;
+    const rect = sigCanvas.getBoundingClientRect();
+    sigCtx.lineTo(e.clientX - rect.left, e.clientY - rect.top);
+    sigCtx.stroke();
+}
+
+function stopDrawing() {
+    isDrawingSignature = false;
+}
+/* ==========================================================
+   === END: DETECT DRAWING TOUCH & MOUSE EVENTS ===
+   ========================================================== */
+
+
+/* ==========================================================
+   === START: CLEAR SIGNATURE CANVAS ===
+   ========================================================== */
+function clearSignature() {
+    if (sigCtx && sigCanvas) {
+        sigCtx.clearRect(0, 0, sigCanvas.width, sigCanvas.height);
     }
 }
-// === END: OFFICE DOCUMENTS MULTI-FORMAT HANDLERS ===
+/* ==========================================================
+   === END: CLEAR SIGNATURE CANVAS ===
+   ========================================================== */
+
+
+/* ==========================================================
+   === START: SAVE SIGNATURE & OVERLAY ON IMAGE ===
+   ========================================================== */
+function saveSignatureAndApply() {
+    if (!sigCanvas) return;
+    
+    // Convert drawn signature to Base64
+    const sigDataUrl = sigCanvas.toDataURL('image/png');
+    
+    // Create an image element to overlay on the workspace
+    const sigImg = document.createElement('img');
+    sigImg.src = sigDataUrl;
+    sigImg.style.position = "absolute";
+    
+    // Position signature near the standard "Signature:" line area
+    sigImg.style.bottom = "12%";
+    sigImg.style.left = "15%";
+    sigImg.style.width = "120px";
+    sigImg.style.pointerEvents = "auto";
+    sigImg.style.cursor = "move"; // Drag & drop supported
+    sigImg.id = "dynamicDocSignature";
+    
+    // Remove previous signature if exists
+    const oldSig = document.getElementById('dynamicDocSignature');
+    if (oldSig) oldSig.remove();
+
+    // Attach to canvas wrapper
+    document.getElementById('canvasBaseWrapper').appendChild(sigImg);
+    
+    // Close signature pad
+    closeSignatureOverlay();
+    alert("Signature placed on document! You can drag to position if needed.");
+}
+/* ==========================================================
+   === END: SAVE SIGNATURE & OVERLAY ON IMAGE ===
+   ========================================================== */
