@@ -482,26 +482,75 @@ async function processDoc(formatType) {
 /* ==========================================================
    === END: COMPILING & EXPORTING PDF ENGINE ===
    ========================================================== */
-
-
 /* ==========================================================
-   === START: SHARE DIRECTLY ON WHATSAPP ===
+   === START: ADVANCED WEB SHARE API FOR WHATSAPP/SYSTEM ===
    ========================================================== */
-function shareToWhatsApp() {
-    // Generate filename and trigger standard web share API if supported
-    alert("Compiling Premium PDF File... Redirecting to WhatsApp.");
-    processDoc('pdf').then(() => {
-        const waUrl = `https://api.whatsapp.com/send?text=Please find attached Shadab Pharmacy Supply Summary PDF generated via MS CamScanner AI.`;
-        window.open(waUrl, '_blank');
-    });
-}
+async function shareToWhatsApp() {
+    document.getElementById('globalLoader').style.display = 'flex';
+    
+    const baseImg = document.getElementById('canvasImageBase');
+    const mergeCanvas = document.createElement('canvas');
+    mergeCanvas.width = baseImg.naturalWidth;
+    mergeCanvas.height = baseImg.naturalHeight;
+    const ctx = mergeCanvas.getContext('2d');
 
-function closeWorkspace() {
-    document.getElementById('premiumWorkspace').classList.remove('active');
+    const imgObj = new Image();
+    imgObj.src = baseImg.src;
+    
+    imgObj.onload = async function() {
+        ctx.filter = getComputedStyle(baseImg).filter;
+        ctx.drawImage(imgObj, 0, 0, mergeCanvas.width, mergeCanvas.height);
+        ctx.filter = 'none';
+
+        // Write typed texts
+        typedFieldsArray.forEach(field => {
+            const xPixel = (field.xCoord / 100) * mergeCanvas.width;
+            const yPixel = (field.yCoord / 100) * mergeCanvas.height;
+            const fontScale = mergeCanvas.width * 0.015;
+            ctx.font = `600 ${fontScale}px Arial, sans-serif`;
+            ctx.fillStyle = '#000000';
+            ctx.textAlign = 'right';
+            ctx.fillText(field.text, xPixel + (fontScale * 2), yPixel + fontScale);
+        });
+
+        // Convert canvas drawing to BLOB (File Format)
+        mergeCanvas.toBlob(async (blob) => {
+            document.getElementById('globalLoader').style.display = 'none';
+            if (!blob) {
+                alert("Error compiling image file.");
+                return;
+            }
+
+            // Create a real file object
+            const file = new File([blob], "Shadab_Pharmacy_Summary.jpg", { type: "image/jpeg" });
+
+            // Check if mobile device supports native sharing
+            if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                try {
+                    await navigator.share({
+                        files: [file],
+                        title: 'Shadab Pharmacy Summary',
+                        text: 'Generated via MS CamScanner AI Pro'
+                    });
+                } catch (err) {
+                    console.log("Sharing failed, opening fallback link: ", err);
+                    window.open(`https://api.whatsapp.com/send?text=Summary generated but could not auto-attach. Please check Gallery.`, '_blank');
+                }
+            } else {
+                // Fallback for desktop/older browsers
+                const dummyLink = document.createElement('a');
+                dummyLink.href = URL.createObjectURL(blob);
+                dummyLink.download = "Shadab_Pharmacy_Summary.jpg";
+                dummyLink.click();
+                alert("Native sharing not supported on this device. The processed image has been downloaded to your gallery. You can now send it manually to WhatsApp!");
+            }
+        }, 'image/jpeg', 0.95);
+    };
 }
 /* ==========================================================
-   === END: SHARE DIRECTLY ON WHATSAPP ===
+   === END: ADVANCED WEB SHARE API FOR WHATSAPP/SYSTEM ===
    ========================================================== */
+
 /* ==========================================================
    === START: SIGNATURE CANVAS SETUP VARIABLES ===
    ========================================================== */
