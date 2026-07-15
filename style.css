@@ -322,22 +322,22 @@ body {
 }
 
 /* Interactive typing input fields */
+/* === START OF STYLE: live-tap-input-field === */
 .live-tap-input-field {
     position: absolute;
-    background: #ffffff; /* سفید بیک گراؤنڈ تاکہ پیچھے کی لائنیں چھپ جائیں */
-    border: 1px solid rgba(0, 122, 255, 0.5); /* بہت باریک نیلا بارڈر */
+    background: #ffffff; /* سفید بیک گراؤنڈ */
+    border: 1px solid rgba(0, 122, 255, 0.4); 
     color: #000000;
     font-family: Arial, sans-serif;
-    font-size: 10px; /* شیٹ کے سائز جتنا فونٹ */
-    font-weight: 600;
+    font-weight: 700;
     outline: none;
-    padding: 1px 2px;
+    padding: 0px 2px;
     margin: 0;
     z-index: 3100;
-    text-align: right; /* نمبر دائیں طرف الائن ہوں گے */
-    width: 45px; /* چوڑائی بالکل فکس تاکہ دوسرے کالم پر نہ چڑھے */
-    height: 14px;
-    line-height: 14px;
+    text-align: right; /* نمبر دائیں طرف الائن */
+    width: 38px; /* چوڑائی بالکل فٹ */
+    height: 11px;
+    line-height: 11px;
     box-sizing: border-box;
     pointer-events: auto;
 }
@@ -346,6 +346,7 @@ body {
     border: 1px solid var(--ios-accent-blue);
     background: #ffffcc; /* فوکس ہونے پر ہلکا پیلا */
 }
+/* === END OF STYLE: live-tap-input-field === */
 
 /* ==========================================================
    === END: DYNAMIC WORKING CANVAS WORKSPACE ===
