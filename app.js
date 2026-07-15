@@ -1,3 +1,8 @@
+// === START OF PERSISTENCE AND ZOOM GLOBALS ===
+let currentSubtotalSum = 0;
+let currentZoomScale = 1;
+// === END OF PERSISTENCE AND ZOOM GLOBALS ===
+
 // === START OF PERSISTENCE FUNCTIONS ===
 function saveAppState() {
     const imgBase = document.getElementById('canvasImageBase');
@@ -34,6 +39,54 @@ let isHDModeActive = true;          // Camera resolution setting tracker
 /* ==========================================================
    === END: GLOBAL APP STATE VARIABLES ===
    ========================================================== */
+// === START OF FUNCTION: saveAppState ===
+function saveAppState() {
+    const imgBase = document.getElementById('canvasImageBase');
+    if (imgBase && imgBase.src && imgBase.src.startsWith('data:image')) {
+        const data = {
+            imageData: imgBase.src,
+            typedFields: typedFieldsArray
+        };
+        localStorage.setItem('shadabScannerData', JSON.stringify(data));
+    }
+}
+// === END OF FUNCTION: saveAppState ===
+
+// === START OF FUNCTION: loadAppState ===
+function loadAppState() {
+    const saved = localStorage.getItem('shadabScannerData');
+    if (saved) {
+        const data = JSON.parse(saved);
+        const imgBase = document.getElementById('canvasImageBase');
+        if (imgBase && data.imageData) {
+            imgBase.src = data.imageData;
+            typedFieldsArray = data.typedFields || [];
+            
+            // امیج لوڈ ہونے کے بعد فیلڈز کو اسکرین پر دوبارہ بنائیں
+            imgBase.onload = function() {
+                const container = document.getElementById('editableFieldsContainer');
+                container.innerHTML = ''; // پرانا صاف کریں
+                
+                typedFieldsArray.forEach(field => {
+                    const inputField = document.createElement('input');
+                    inputField.type = 'text';
+                    inputField.className = 'live-tap-input-field';
+                    inputField.style.left = `${field.x}%`;
+                    inputField.style.top = `${field.y}%`;
+                    inputField.value = field.text;
+                    
+                    // اگر پہلے سے سیو ہے تو بارڈر ہٹا دیں
+                    inputField.style.border = "none";
+                    inputField.style.background = "transparent";
+                    
+                    container.appendChild(inputField);
+                });
+                calculateSubtotals();
+            };
+        }
+    }
+}
+// === END OF FUNCTION: loadAppState ===
 
 
 /* ==========================================================
@@ -205,11 +258,13 @@ function handleCanvasTap(event) {
     const container = document.getElementById('editableFieldsContainer');
     
     const rect = imgBase.getBoundingClientRect();
-    const clickX = event.clientX - rect.left;
-    const clickY = event.clientY - rect.top;
     
-    const pctX = (clickX / rect.width) * 100;
-    const pctY = (clickY / rect.height) * 100;
+    // زوم اسکیل کو ایڈجسٹ کر کے اصلی ٹیپ لوکیشن نکالنا
+    const clickX = (event.clientX - rect.left) / currentZoomScale;
+    const clickY = (event.clientY - rect.top) / currentZoomScale;
+    
+    const pctX = (clickX / (rect.width / currentZoomScale)) * 100;
+    const pctY = (clickY / (rect.height / currentZoomScale)) * 100;
 
     // دو کالمز کی پوزیشن لاک (Return Amount = 77.2%, Received Amount = 91.8%)
     const returnColumnX = 77.2;
@@ -246,6 +301,58 @@ function handleCanvasTap(event) {
     }
 }
 // === END OF FUNCTION: handleCanvasTap ===
+
+// === START OF FUNCTION: createNewInputField ===
+function createNewInputField(lockedX, lockedY, rowIndex, container) {
+    const inputField = document.createElement('input');
+    inputField.type = 'text';
+    inputField.className = 'live-tap-input-field';
+    
+    inputField.style.left = `${lockedX}%`;
+    inputField.style.top = `${lockedY}%`;
+    
+    inputField.setAttribute('data-row-index', rowIndex);
+    inputField.setAttribute('data-col-x', lockedX);
+    
+    container.appendChild(inputField);
+    inputField.focus();
+
+    inputField.addEventListener('blur', function() {
+        if (inputField.value.trim() !== "") {
+            inputField.style.border = "none";
+            inputField.style.background = "transparent";
+            
+            // ڈیٹا لوکل ارے میں سیو کریں
+            saveTypedFieldData(lockedX, lockedY, inputField.value);
+            // لوکل اسٹوریج میں بھی سیو کریں
+            saveAppState();
+            calculateSubtotals();
+        } else {
+            inputField.remove();
+        }
+    });
+
+    inputField.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            inputField.blur(); // ڈیٹا سیو کرے گا
+
+            // اگلی رو پر خود بخود جمپ کرنا
+            const nextRowIndex = rowIndex + 1;
+            const tableTop = 25.5;
+            const tableBottom = 57.5;
+            const totalRows = 24;
+            const rowHeight = (tableBottom - tableTop) / totalRows;
+            const nextLockedY = tableTop + (nextRowIndex * rowHeight) - 0.4;
+
+            if (nextRowIndex < totalRows) {
+                createNewInputField(lockedX, nextLockedY, nextRowIndex, container);
+            }
+        }
+    });
+}
+// === END OF FUNCTION: createNewInputField ===
+
 
 // === START OF FUNCTION: createNewInputField ===
 function createNewInputField(lockedX, lockedY, rowIndex, container) {
@@ -784,25 +891,21 @@ function saveSignatureAndApply() {
 /* ==========================================================
    === END: SAVE SIGNATURE & OVERLAY ON IMAGE ===
    ========================================================== */
-// global variable definition (place this where other globals are defined or right above)
-let currentSubtotalSum = 0;
-
-// === START OF FUNCTION: calculateSubtotals ===
-function calculateSubtotals() {
-    let tempSum = 0;
-    const allInputs = document.querySelectorAll('.live-tap-input-field');
+// === START OF BLOCK: PRINT TOTAL ON CANVAS ===
+if (currentSubtotalSum > 0) {
+    const formattedSum = currentSubtotalSum.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     
-    allInputs.forEach(input => {
-        const val = input.value.replace(/[^0-9.-]/g, ''); 
-        if (val !== "" && !isNaN(val)) {
-            tempSum += parseFloat(val);
-        }
-    });
+    // شاداب فارمیسی سمری شیٹ کے نیچے فائنل ٹوٹل والی جگہ کی پوزیشننگ (تصویر کے مطابق بالکل درست جگہ)
+    const totalX = mergeCanvas.width * 0.942; // دائیں طرف کالم کی الائنمنٹ
+    const totalY = mergeCanvas.height * 0.582; // روڈ کے بالکل نیچے کی لائن پوزیشن
+    const fontScaleTotal = mergeCanvas.width * 0.015; // ٹیکسٹ سائز بالکل اسکیل کے مطابق
 
-    currentSubtotalSum = tempSum;
-    updateLiveCalculatorUI();
+    ctx.font = `700 ${fontScaleTotal}px Arial, sans-serif`;
+    ctx.fillStyle = '#000000';
+    ctx.textAlign = 'right'; // دائیں طرف سے الائنمنٹ تاکہ نمبر سیدھے رہیں
+    ctx.fillText(formattedSum, totalX, totalY);
 }
-// === END OF FUNCTION: calculateSubtotals ===
+// === END OF BLOCK: PRINT TOTAL ON CANVAS ===
 
 // === START OF FUNCTION: updateLiveCalculatorUI ===
 function updateLiveCalculatorUI() {
@@ -834,3 +937,15 @@ function changeZoom(amount) {
     container.style.transform = `scale(${scale})`;
 }
 // === END OF ZOOM FUNCTION ===
+// === START OF FUNCTION: changeZoom ===
+function changeZoom(amount) {
+    const container = document.getElementById('editableFieldsContainer');
+    if (container) {
+        currentZoomScale += amount;
+        if (currentZoomScale < 1) currentZoomScale = 1; // 100% سے کم نہ ہو
+        if (currentZoomScale > 3) currentZoomScale = 3; // زیادہ سے زیادہ 3 گنا زوم
+        
+        container.style.transform = `scale(${currentZoomScale})`;
+    }
+}
+// === END OF FUNCTION: changeZoom ===
