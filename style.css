@@ -323,32 +323,33 @@ body {
 
 /* Interactive typing input fields */
 /* === START OF STYLE: live-tap-input-field === */
+/* === START OF STYLE: live-tap-input-field === */
 .live-tap-input-field {
     position: absolute;
-    background: #ffffff; /* بیک گراؤنڈ سفید تاکہ پیچھے کی پرنٹنگ چھپ جائے */
-    border: 1px solid rgba(0, 122, 255, 0.4); 
+    background: #ffffff; /* سفید بیک گراؤنڈ تاکہ نیچے کے پرانے ہندسے چھپ جائیں */
+    border: 1px solid #007aff; /* باریک خوبصورت نیلا بارڈر */
     color: #000000;
     font-family: Arial, sans-serif;
     font-weight: 700;
+    font-size: 11px; /* بڑا اور واضح ٹیکسٹ سائز جیسا آپ کو پسند ہے */
     outline: none;
-    padding: 0px 4px;
+    padding: 1px 4px;
     margin: 0;
     z-index: 3100;
     text-align: right; /* ایکسل کی طرح رائٹ الائنمنٹ */
-    width: 48px; /* کالم کی ڈتھ کے مطابق فکسڈ سائز */
-    height: 12px;
-    line-height: 12px;
+    width: 60px; /* چوڑائی بالکل فکس */
+    height: 16px; /* رو کے اندر بالکل فٹ اونچائی */
+    line-height: 16px;
     box-sizing: border-box;
     pointer-events: auto;
+    border-radius: 2px;
 }
 
 .live-tap-input-field:focus {
-    border: 1px solid var(--ios-accent-blue);
-    background: #ffffcc; /* سلیکٹ ہونے پر ہلکا پیلا ہائی لائٹ */
+    border: 1.5px solid #0051a8;
+    background: #ffffcc; /* فوکس پر ہلکا پیلا الائنڈ کلر */
 }
 /* === END OF STYLE: live-tap-input-field === */
-
-
 /* ==========================================================
    === END: DYNAMIC WORKING CANVAS WORKSPACE ===
    ========================================================== */
