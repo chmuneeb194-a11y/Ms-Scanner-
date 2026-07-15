@@ -1,3 +1,26 @@
+// === START OF PERSISTENCE FUNCTIONS ===
+function saveAppState() {
+    const imgBase = document.getElementById('canvasImageBase');
+    const data = {
+        imageData: imgBase.src,
+        typedFields: typedFieldsArray
+    };
+    localStorage.setItem('shadabScannerData', JSON.stringify(data));
+}
+
+function loadAppState() {
+    const saved = localStorage.getItem('shadabScannerData');
+    if (saved) {
+        const data = JSON.parse(saved);
+        const imgBase = document.getElementById('canvasImageBase');
+        imgBase.src = data.imageData;
+        typedFieldsArray = data.typedFields;
+        // یہاں آپ کے موجودہ فنکشنز کو کال کریں جو ان پٹ فیلڈز دوبارہ ڈرا کرتے ہیں
+        restoreInputsOnScreen(typedFieldsArray);
+    }
+}
+// === END OF PERSISTENCE FUNCTIONS ===
+
 /* ==========================================================
    === START: GLOBAL APP STATE VARIABLES ===
    ========================================================== */
@@ -794,3 +817,20 @@ function updateLiveCalculatorUI() {
     }
 }
 // === END OF FUNCTION: updateLiveCalculatorUI ===
+// === START OF ZOOM FUNCTION ===
+let scale = 1;
+const container = document.getElementById('editableFieldsContainer');
+
+container.addEventListener('touchstart', function(e) {
+    if (e.touches.length === 2) {
+        // زوم لاجک یہاں آئے گی
+    }
+}, {passive: false});
+
+// زوم کنٹرول کے لیے سادہ طریقہ: دو بٹن ( + ) اور ( - ) اسکرین پر لگا لیں
+function changeZoom(amount) {
+    scale += amount;
+    if(scale < 1) scale = 1;
+    container.style.transform = `scale(${scale})`;
+}
+// === END OF ZOOM FUNCTION ===
