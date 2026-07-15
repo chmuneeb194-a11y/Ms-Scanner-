@@ -257,45 +257,48 @@ function handleCanvasTap(event) {
     const imgBase = document.getElementById('canvasImageBase');
     const container = document.getElementById('editableFieldsContainer');
     
+    if (!imgBase) return;
+
     const rect = imgBase.getBoundingClientRect();
     
-    // زوم اسکیل کے مطابق درست ماؤس پوزیشن تلاش کرنا
+    // زوم کے حساب سے ماؤس کلک پوزیشن حاصل کرنا
     const clickX = (event.clientX - rect.left) / currentZoomScale;
     const clickY = (event.clientY - rect.top) / currentZoomScale;
     
     const pctX = (clickX / (rect.width / currentZoomScale)) * 100;
     const pctY = (clickY / (rect.height / currentZoomScale)) * 100;
 
-    // دو پوزیشنز لاک: (Return Amount = 77.0%, Received Amount = 91.5%)
-    const returnColumnX = 77.0;
-    const receivedColumnX = 91.5;
+    // دو کالمز کی پوزیشن لاک (تصویر کی چوڑائی کے لحاظ سے)
+    const returnColumnX = 77.0; // Return Column %
+    const receivedColumnX = 91.5; // Received Column %
     
-    // کالم ڈیٹیکٹر: کون سا کالم ٹیپ کے قریب ترین ہے؟
+    // جو کالم کلک کے زیادہ قریب ہو، پوزیشن وہاں لاک کر دیں
     const lockedX = (Math.abs(pctX - returnColumnX) < Math.abs(pctX - receivedColumnX)) ? returnColumnX : receivedColumnX;
 
-    // رو لائیو پوزیشن ڈیٹیکٹر (کل 24 روز)
-    const tableTop = 25.4;
-    const tableBottom = 57.4;
+    // لائیو پیپر ہائٹ اسکیننگ ٹیکنالوجی
+    // یہ آپ کے پیپر پر لکھی ہوئی 24 لائنوں کو تصویر کے سائز کے مطابق لائیو مینیج کرتی ہے
+    const tableTopPct = 25.4; 
+    const tableBottomPct = 57.4;
     const totalRows = 24;
-    const rowHeight = (tableBottom - tableTop) / totalRows;
+    const rowHeight = (tableBottomPct - tableTopPct) / totalRows;
 
-    // لائیو چیک: کیا ٹیپ شیٹ کے ٹیبل ایریا کے اندر ہوا ہے؟
-    if (pctY >= tableTop - 0.5 && pctY <= tableBottom + 0.5) {
-        // قریبی ترین رو (Row) کو خود بخود ڈیٹیکٹ اور لاک کرنا
-        const rowIndex = Math.round((pctY - tableTop) / rowHeight);
+    // لائیو چیک: کیا کلک لائیو شیٹ کے رینج کے اندر ہوا ہے؟
+    if (pctY >= tableTopPct - 1.0 && pctY <= tableBottomPct + 1.0) {
+        // قریبی ترین رو (Row) انڈیکس تلاش کرنا
+        const rowIndex = Math.round((pctY - tableTopPct) / rowHeight);
         
-        // یہ فارمولا کواڈینیٹ کو بالکل لائن کے سینٹر میں فکس کر دے گا
-        const lockedY = tableTop + (rowIndex * rowHeight) - 0.35;
+        // بالکل رو کے بیچ میں وائے کواڈینیٹ لاک کرنا
+        const lockedY = tableTopPct + (rowIndex * rowHeight) - 0.35;
 
-        // پہلے سے موجود ان پٹ فیلڈ کو اوور لیپ ہونے سے بچانا
+        // چیک کریں کہ اس لائن پر پہلے سے کوئی ڈبہ موجود تو نہیں
         const existingFields = container.querySelectorAll('.live-tap-input-field');
         let isDuplicate = false;
         existingFields.forEach(f => {
             const topPct = parseFloat(f.style.top);
             const leftPct = parseFloat(f.style.left);
-            if (Math.abs(topPct - lockedY) < 0.3 && Math.abs(leftPct - lockedX) < 0.3) {
+            if (Math.abs(topPct - lockedY) < 0.4 && Math.abs(leftPct - lockedX) < 0.4) {
                 isDuplicate = true;
-                f.focus(); // اگر موجود ہے تو اسے ہی سلیکٹ کرو، نیا نہ بناؤ
+                f.focus(); // ڈپلیکیٹ بنانے کی بجائے پرانے پر فوکس کریں
             }
         });
 
@@ -326,9 +329,9 @@ function createNewInputField(lockedX, lockedY, rowIndex, container) {
             inputField.style.border = "none";
             inputField.style.background = "transparent";
             
-            // پرانا ڈیٹا صاف کر کے صرف ایک ہی یونیک پوزیشن پر ڈیٹا سیو ہوگا
+            // پرانی پوزیشن کو صاف کر کے لائیو ڈیٹا گرڈ میں پش کریں
             saveTypedFieldData(lockedX, lockedY, inputField.value);
-            saveAppState();
+            saveAppState(); // لوکل اسٹوریج میں لائیو سیونگ
             calculateSubtotals();
         } else {
             inputField.remove();
@@ -338,16 +341,16 @@ function createNewInputField(lockedX, lockedY, rowIndex, container) {
     inputField.addEventListener('keypress', function(e) {
         if (e.key === 'Enter') {
             e.preventDefault();
-            inputField.blur(); // ڈیٹا لائیو سیو کرے گا
+            inputField.blur(); // ڈیٹا سیو کر کے اگلی رو تلاش کرے گا
 
-            // اگلی رو پر آٹومیٹک جمپ
             const nextRowIndex = rowIndex + 1;
-            const tableTop = 25.4;
-            const tableBottom = 57.4;
+            const tableTopPct = 25.4; 
+            const tableBottomPct = 57.4;
             const totalRows = 24;
-            const rowHeight = (tableBottom - tableTop) / totalRows;
-            const nextLockedY = tableTop + (nextRowIndex * rowHeight) - 0.35;
+            const rowHeight = (tableBottomPct - tableTopPct) / totalRows;
+            const nextLockedY = tableTopPct + (nextRowIndex * rowHeight) - 0.35;
 
+            // اگر اگلی قطار شیٹ کی حد کے اندر ہے، تو خود بخود کی بورڈ نیچے والے ڈبے میں شفٹ ہو جائے گا
             if (nextRowIndex < totalRows) {
                 createNewInputField(lockedX, nextLockedY, nextRowIndex, container);
             }
@@ -355,111 +358,6 @@ function createNewInputField(lockedX, lockedY, rowIndex, container) {
     });
 }
 // === END OF FUNCTION: createNewInputField ===
-
-
-// === START OF FUNCTION: createNewInputField ===
-function createNewInputField(lockedX, lockedY, rowIndex, container) {
-    const inputField = document.createElement('input');
-    inputField.type = 'text';
-    inputField.className = 'live-tap-input-field';
-    
-    inputField.style.left = `${lockedX}%`;
-    inputField.style.top = `${lockedY}%`;
-    
-    inputField.setAttribute('data-row-index', rowIndex);
-    inputField.setAttribute('data-col-x', lockedX);
-    
-    container.appendChild(inputField);
-    inputField.focus();
-
-    inputField.addEventListener('blur', function() {
-        if (inputField.value.trim() !== "") {
-            inputField.style.border = "none";
-            inputField.style.background = "transparent";
-            
-            // ڈیٹا لوکل ارے میں سیو کریں
-            saveTypedFieldData(lockedX, lockedY, inputField.value);
-            // لوکل اسٹوریج میں بھی سیو کریں
-            saveAppState();
-            calculateSubtotals();
-        } else {
-            inputField.remove();
-        }
-    });
-
-    inputField.addEventListener('keypress', function(e) {
-        if (e.key === 'Enter') {
-            e.preventDefault();
-            inputField.blur(); // ڈیٹا سیو کرے گا
-
-            // اگلی رو پر خود بخود جمپ کرنا
-            const nextRowIndex = rowIndex + 1;
-            const tableTop = 25.5;
-            const tableBottom = 57.5;
-            const totalRows = 24;
-            const rowHeight = (tableBottom - tableTop) / totalRows;
-            const nextLockedY = tableTop + (nextRowIndex * rowHeight) - 0.4;
-
-            if (nextRowIndex < totalRows) {
-                createNewInputField(lockedX, nextLockedY, nextRowIndex, container);
-            }
-        }
-    });
-}
-// === END OF FUNCTION: createNewInputField ===
-
-
-// === START OF FUNCTION: createNewInputField ===
-function createNewInputField(lockedX, lockedY, rowIndex, container) {
-    const inputField = document.createElement('input');
-    inputField.type = 'text';
-    inputField.className = 'live-tap-input-field';
-    
-    inputField.style.left = `${lockedX}%`;
-    inputField.style.top = `${lockedY}%`;
-    
-    // رو اور کالم ڈیٹا ٹریک کرنے کے لیے کسٹم ایٹریبیوٹس
-    inputField.setAttribute('data-row-index', rowIndex);
-    inputField.setAttribute('data-col-x', lockedX);
-    
-    container.appendChild(inputField);
-    inputField.focus();
-
-    inputField.addEventListener('blur', function() {
-        if (inputField.value.trim() !== "") {
-            inputField.style.border = "none";
-            inputField.style.background = "transparent";
-            
-            saveTypedFieldData(lockedX, lockedY, inputField.value);
-            calculateSubtotals();
-        } else {
-            inputField.remove();
-        }
-    });
-
-    inputField.addEventListener('keypress', function(e) {
-        // جب موبائل کی بورڈ کا نیچے والا تیر (Enter/Next/Done) دبایا جائے
-        if (e.key === 'Enter') {
-            e.preventDefault();
-            inputField.blur(); // پرانی ویلیو سیو کریں
-
-            // نیچے والی رو انڈیکس کا حساب لگائیں
-            const nextRowIndex = rowIndex + 1;
-            const tableTop = 25.5;
-            const tableBottom = 57.5;
-            const totalRows = 24;
-            const rowHeight = (tableBottom - tableTop) / totalRows;
-            const nextLockedY = tableTop + (nextRowIndex * rowHeight) - 0.4;
-
-            // اگر اگلی رو ٹیبل کی حدود کے اندر ہے تو خود بخود نیا باکس کھول دیں
-            if (nextRowIndex < totalRows) {
-                createNewInputField(lockedX, nextLockedY, nextRowIndex, container);
-            }
-        }
-    });
-}
-// === END OF FUNCTION: createNewInputField ===
-
 
 /* ==========================================================
    === START: SAVE TYPED FIELD INTERNAL DATA ===
@@ -745,17 +643,18 @@ async function shareToWhatsApp() {
 if (currentSubtotalSum > 0) {
     const formattedSum = currentSubtotalSum.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     
-    // شاداب فارمیسی سمری شیٹ کے مطابق نیچے فائنل ٹوٹل کی پوزیشن
-    const totalX = mergeCanvas.width * 0.918; // بلکل کالم کے نیچے الائنمنٹ
-    const totalY = mergeCanvas.height * 0.585; // نچلا باکس کواڈینیٹ
-    const fontScaleTotal = mergeCanvas.width * 0.015; // کینوس کے حساب سے ٹیکسٹ کا سائز
+    // شاداب فارمیسی شیٹ کی باٹم لائن کے مطابق آخری ٹوٹل خانے کی پوزیشن
+    const totalX = mergeCanvas.width * 0.915; // کالم کی رائٹ الائنمنٹ
+    const totalY = mergeCanvas.height * 0.582; // تصویر کے بالکل اینڈ کی ٹوٹل لائن پوزیشن
+    const fontScaleTotal = mergeCanvas.width * 0.015; // ٹیکسٹ سائز
 
     ctx.font = `700 ${fontScaleTotal}px Arial, sans-serif`;
     ctx.fillStyle = '#000000';
-    ctx.textAlign = 'right';
+    ctx.textAlign = 'right'; // دائیں طرف سے برابر الائنمنٹ
     ctx.fillText(formattedSum, totalX, totalY);
 }
 // === END OF BLOCK: PRINT TOTAL ON CANVAS ===
+        
        
         // Convert canvas drawing to BLOB (File Format)
         mergeCanvas.toBlob(async (blob) => {
