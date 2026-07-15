@@ -185,18 +185,57 @@ function handleCanvasTap(event) {
     const clickX = event.clientX - rect.left;
     const clickY = event.clientY - rect.top;
     
-    const adjustedX = clickX - 25; 
-    const adjustedY = clickY - 7;
+    const pctX = (clickX / rect.width) * 100;
+    const pctY = (clickY / rect.height) * 100;
 
-    const pctX = (adjustedX / rect.width) * 100;
-    const pctY = (adjustedY / rect.height) * 100;
+    // دو کالمز کی پوزیشن لاک (Return Amount = 77.2%, Received Amount = 91.8%)
+    const returnColumnX = 77.2;
+    const receivedColumnX = 91.8;
+    
+    // کالم ڈٹیکشن: اگر ٹیپ Return کالم کے قریب ہوا تو وہاں لاک کرو، ورنہ Received پر
+    const lockedX = (Math.abs(pctX - returnColumnX) < Math.abs(pctX - receivedColumnX)) ? returnColumnX : receivedColumnX;
 
+    // رو گریڈ لاک (24 روز)
+    const tableTop = 25.5;
+    const tableBottom = 57.5;
+    const totalRows = 24;
+    const rowHeight = (tableBottom - tableTop) / totalRows;
+
+    if (pctY >= tableTop - 1 && pctY <= tableBottom + 1) {
+        const rowIndex = Math.round((pctY - tableTop) / rowHeight);
+        const lockedY = tableTop + (rowIndex * rowHeight) - 0.4;
+
+        // پہلے سے موجود فیلڈ چیک کرنا
+        const existingFields = container.querySelectorAll('.live-tap-input-field');
+        let isDuplicate = false;
+        existingFields.forEach(f => {
+            const topPct = parseFloat(f.style.top);
+            const leftPct = parseFloat(f.style.left);
+            if (Math.abs(topPct - lockedY) < 0.5 && Math.abs(leftPct - lockedX) < 0.5) {
+                isDuplicate = true;
+                f.focus();
+            }
+        });
+
+        if (isDuplicate) return;
+
+        createNewInputField(lockedX, lockedY, rowIndex, container);
+    }
+}
+// === END OF FUNCTION: handleCanvasTap ===
+
+// === START OF FUNCTION: createNewInputField ===
+function createNewInputField(lockedX, lockedY, rowIndex, container) {
     const inputField = document.createElement('input');
     inputField.type = 'text';
     inputField.className = 'live-tap-input-field';
     
-    inputField.style.left = `${pctX}%`;
-    inputField.style.top = `${pctY}%`;
+    inputField.style.left = `${lockedX}%`;
+    inputField.style.top = `${lockedY}%`;
+    
+    // رو اور کالم ڈیٹا ٹریک کرنے کے لیے کسٹم ایٹریبیوٹس
+    inputField.setAttribute('data-row-index', rowIndex);
+    inputField.setAttribute('data-col-x', lockedX);
     
     container.appendChild(inputField);
     inputField.focus();
@@ -206,7 +245,7 @@ function handleCanvasTap(event) {
             inputField.style.border = "none";
             inputField.style.background = "transparent";
             
-            saveTypedFieldData(pctX, pctY, inputField.value);
+            saveTypedFieldData(lockedX, lockedY, inputField.value);
             calculateSubtotals();
         } else {
             inputField.remove();
@@ -214,12 +253,28 @@ function handleCanvasTap(event) {
     });
 
     inputField.addEventListener('keypress', function(e) {
+        // جب موبائل کی بورڈ کا نیچے والا تیر (Enter/Next/Done) دبایا جائے
         if (e.key === 'Enter') {
-            inputField.blur();
+            e.preventDefault();
+            inputField.blur(); // پرانی ویلیو سیو کریں
+
+            // نیچے والی رو انڈیکس کا حساب لگائیں
+            const nextRowIndex = rowIndex + 1;
+            const tableTop = 25.5;
+            const tableBottom = 57.5;
+            const totalRows = 24;
+            const rowHeight = (tableBottom - tableTop) / totalRows;
+            const nextLockedY = tableTop + (nextRowIndex * rowHeight) - 0.4;
+
+            // اگر اگلی رو ٹیبل کی حدود کے اندر ہے تو خود بخود نیا باکس کھول دیں
+            if (nextRowIndex < totalRows) {
+                createNewInputField(lockedX, nextLockedY, nextRowIndex, container);
+            }
         }
     });
 }
-// === END OF FUNCTION: handleCanvasTap ===
+// === END OF FUNCTION: createNewInputField ===
+
 
 /* ==========================================================
    === START: SAVE TYPED FIELD INTERNAL DATA ===
@@ -504,9 +559,11 @@ async function shareToWhatsApp() {
 // === START OF BLOCK: PRINT TOTAL ON CANVAS ===
 if (currentSubtotalSum > 0) {
     const formattedSum = currentSubtotalSum.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-    const totalX = mergeCanvas.width * 0.61; 
-    const totalY = mergeCanvas.height * 0.585; 
-    const fontScaleTotal = mergeCanvas.width * 0.014;
+    
+    // شاداب فارمیسی سمری شیٹ کے مطابق نیچے فائنل ٹوٹل کی پوزیشن
+    const totalX = mergeCanvas.width * 0.918; // بلکل کالم کے نیچے الائنمنٹ
+    const totalY = mergeCanvas.height * 0.585; // نچلا باکس کواڈینیٹ
+    const fontScaleTotal = mergeCanvas.width * 0.015; // کینوس کے حساب سے ٹیکسٹ کا سائز
 
     ctx.font = `700 ${fontScaleTotal}px Arial, sans-serif`;
     ctx.fillStyle = '#000000';
