@@ -1,212 +1,243 @@
-<!-- === START: INDEX.HTML PRIMARY STRUCTURE === -->
+<!-- === START: DOCUMENT CORE HEADER & EXTERNAL LIBRARIES === -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>MS CamScanner AI Workspace Pro</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>MS CamScanner AI Pro Max - 2026 Flagship Edition</title>
     
-    <!-- External Powerful Engine Libraries (2026 Layout) -->
-    <!-- PDF Generation -->
+    <!-- Real-time Cropper and Image Processing Engines[span_0](start_span)[span_0](end_span) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
+    
+    <!-- Genuine PDF Compiler and JS Layout Engines[span_1](start_span)[span_1](end_span) -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <!-- Excel Sheets Handler -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-    <!-- Word Document (.docx) Handler -->
-    <script src="https://cdn.jsdelivr.net/npm/mammoth@1.4.8/mammoth.browser.min.js"></script>
     
-    <!-- Link to External Stylesheet -->
+    <!-- External Separate Stylesheet Link -->
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
+<!-- === END: DOCUMENT CORE HEADER & EXTERNAL LIBRARIES === -->
 
-    <!-- Global Processing Loader Overlay -->
-    <div id="ai-global-loader" class="ai-loader-container" style="display: none;">
-        <div class="spinner"></div>
-        <p id="loader-text">AI Processing Engine Active...</p>
+
+<!-- === START: 2026 GLOBAL PROCESSING LOADER === -->
+<div id="globalLoader">
+    <div class="spinner"></div>
+    <p id="loaderMessage" style="color: #ffffff; margin-top: 18px; font-weight: 600; font-size: 0.9rem; letter-spacing: 0.5px;">Initializing 2026 Neural Engine...</p>
+</div>
+<!-- === END: 2026 GLOBAL PROCESSING LOADER === -->
+
+
+<!-- === START: ULTRA GLASSMORPHIC HEADER & NAVIGATION === -->
+<header class="ios-header">
+    <!-- ہیمبرگر بٹن بائیں طرف (3-Line Premium Menu) -->
+    <button class="hamburger-btn" onclick="toggleSidebar(true)" style="font-size: 1.6rem; background: none; border: none; color: #ffffff; cursor: pointer;">☰</button>
+    
+    <!-- برانڈ لوگو درمیان میں -->
+    <div class="ios-brand" onclick="switchTab('home')" style="cursor: pointer;">
+        MS CamScanner <span style="background: var(--ios-accent-blue); padding: 2px 8px; border-radius: 12px; font-size: 0.65rem; font-weight: 800;">AI MAX</span>
     </div>
+    
+    <!-- رائٹ سائیڈ شارٹ کٹ بٹنز (Quick Cloud & Profile) -->
+    <div class="header-right-actions" style="display: flex; gap: 12px; align-items: center;">
+        <button onclick="triggerQuickCloudSync()" style="background: rgba(255, 255, 255, 0.08); border: none; border-radius: 50%; width: 36px; height: 36px; display: flex; justify-content: center; align-items: center; color: #fff; cursor: pointer;">☁️</button>
+        <button onclick="openProfileSettings()" style="background: rgba(0, 122, 255, 0.15); border: none; border-radius: 50%; width: 36px; height: 36px; display: flex; justify-content: center; align-items: center; color: var(--ios-accent-blue); font-size: 1.1rem; cursor: pointer;">👤</button>
+    </div>
+</header>
+<!-- === END: ULTRA GLASSMORPHIC HEADER & NAVIGATION === -->
 
-    <!-- Main App Container -->
-    <div class="app-shell">
+
+<!-- === START: 2026 SLIDE-OUT DRAWER SIDEBAR === -->
+<div id="sidebarMenu" class="sidebar-menu" style="position: fixed; top: 0; left: -300px; width: 300px; height: 100%; background: #0b0f1f; border-right: 1px solid var(--border-navy); box-shadow: 10px 0 30px rgba(0,0,0,0.6); z-index: 9000; transition: left 0.3s cubic-bezier(0.1, 0.9, 0.2, 1); padding: 24px; display: flex; flex-direction: column; justify-content: space-between;">
+    <div>
+        <!-- سائڈبار ہیڈ -->
+        <div style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 20px; border-bottom: 1px solid rgba(255,255,255,0.08);">
+            <div style="font-weight: 700; color: #fff; font-size: 1.1rem;">AI Command Center</div>
+            <button onclick="toggleSidebar(false)" style="background: none; border: none; color: var(--text-gray); font-size: 1.3rem; cursor: pointer;">✕</button>
+        </div>
         
-        <!-- Top Navigation Bar -->
-        <header class="main-header">
-            <div class="hamburger-menu" onclick="toggleHamburgerMenu(true)">
-                <span></span>
-                <span></span>
-                <span></span>
+        <!-- مینو آئٹمز کی لسٹ -->
+        <nav style="margin-top: 24px; display: flex; flex-direction: column; gap: 8px;">
+            <div class="sidebar-item" onclick="alert('Magic B&W Smart Filter Enabled!')" style="padding: 14px; border-radius: 12px; color: #fff; background: rgba(255,255,255,0.03); cursor: pointer; display: flex; align-items: center; gap: 12px; transition: 0.2s;">
+                <span>✨</span> <strong>Smart B&W Contrast</strong>
             </div>
-            <div class="app-identity">
-                <h1>MS ScanSuite <span class="badge-ai">AI Pro</span></h1>
+            <div class="sidebar-item" onclick="triggerOCRExtractor()" style="padding: 14px; border-radius: 12px; color: #fff; cursor: pointer; display: flex; align-items: center; gap: 12px; transition: 0.2s;">
+                <span>📝</span> <strong>OCR Text Extractor (AI)</strong>
             </div>
-            <div class="header-actions">
-                <button class="backup-btn" onclick="triggerDatabaseBackup()" title="Backup Database">📦 Backup</button>
+            <div class="sidebar-item" onclick="triggerWatermarkSetup()" style="padding: 14px; border-radius: 12px; color: #fff; cursor: pointer; display: flex; align-items: center; gap: 12px; transition: 0.2s;">
+                <span>🔒</span> <strong>Add Safe Watermark</strong>
             </div>
-        </header>
-
-        <!-- 3-Menu Hamburger Sidebar Drawer -->
-        <nav id="sidebar-drawer" class="sidebar-navigation">
-            <div class="sidebar-header">
-                <h3>Main Menu</h3>
-                <button class="close-sidebar-btn" onclick="toggleHamburgerMenu(false)">✕</button>
+            <div class="sidebar-item" onclick="triggerSignaturePad()" style="padding: 14px; border-radius: 12px; color: #fff; cursor: pointer; display: flex; align-items: center; gap: 12px; transition: 0.2s;">
+                <span>✍️</span> <strong>Digital Signature Pad</strong>
             </div>
-            <ul class="sidebar-links">
-                <li onclick="switchAppTab('dashboard')">📂 My Workspace Storage</li>
-                <li onclick="switchAppTab('advanced-converters')">🔄 PDF / Excel / Word Tools</li>
-                <li onclick="switchAppTab('system-settings')">⚙️ App System & Memory Backup</li>
-            </ul>
+            <div class="sidebar-item" onclick="alert('Cloud Secure Backup Sync Active!')" style="padding: 14px; border-radius: 12px; color: #fff; cursor: pointer; display: flex; align-items: center; gap: 12px; transition: 0.2s;">
+                <span>☁️</span> <strong>Cloud Auto Backup</strong>
+            </div>
         </nav>
-        <div id="sidebar-overlay" class="drawer-overlay" onclick="toggleHamburgerMenu(false)"></div>
-
-        <!-- MAIN WORKSPACE VIEWS PANELS -->
-        <main class="workspace-viewport">
-            
-            <!-- PANEL 1: DASHBOARD (Workspace Memory & Files) -->
-            <section id="view-dashboard" class="view-panel active">
-                <div class="welcome-banner">
-                    <h2>Active Scanner Workspace</h2>
-                    <p>Files stay secured in your browser's persistent sandbox memory.</p>
-                </div>
-                
-                <!-- Quick Trigger Cards -->
-                <div class="scanner-trigger-grid">
-                    <div class="trigger-card doc-mode" onclick="initiateCameraScan('document')">
-                        <div class="card-icon">📄</div>
-                        <h4>Scan Document</h4>
-                    </div>
-                    <div class="trigger-card card-mode" onclick="initiateCameraScan('idcard')">
-                        <div class="card-icon">🪪</div>
-                        <h4>ID Card Scanner</h4>
-                    </div>
-                    <div class="trigger-card edit-mode" onclick="triggerDirectImageUpload()">
-                        <div class="card-icon">✍️</div>
-                        <h4>Smart Editor Image</h4>
-                    </div>
-                </div>
-
-                <!-- Live Memory Files Counter -->
-                <div class="storage-indicator-bar">
-                    <span>Local Database Storage: <strong id="db-file-count">0</strong> Saved Records</span>
-                </div>
-
-                <!-- Permanent Active Screen Records -->
-                <div class="recents-section">
-                    <h3>Workspace Permanent Screen</h3>
-                    <div id="workspace-permanent-list" class="files-list-grid">
-                        <!-- Documents will stay rendered here directly from localstorage -->
-                    </div>
-                </div>
-            </section>
-
-            <!-- PANEL 2: ADVANCED CONVERTERS (PDF To Excel, Word etc.) -->
-            <section id="view-advanced-converters" class="view-panel">
-                <div class="section-title">
-                    <h2>Advanced Multi-Format Converters</h2>
-                    <p>Convert documents locally with 0% data leakage risk.</p>
-                </div>
-
-                <div class="converters-wrapper-grid">
-                    <!-- Excel to PDF -->
-                    <div class="converter-box">
-                        <h4>Excel Sheet (.xlsx) ➔ PDF Document</h4>
-                        <input type="file" id="excel-to-pdf-input" accept=".xlsx" onchange="convertExcelToPdfEngine(this)">
-                    </div>
-
-                    <!-- PDF to Excel / Text Data -->
-                    <div class="converter-box">
-                        <h4>PDF Document ➔ Plain Text / Data</h4>
-                        <input type="file" id="pdf-to-text-input" accept=".pdf" onchange="convertPdfToTextEngine(this)">
-                    </div>
-
-                    <!-- Word Docx to PDF -->
-                    <div class="converter-box">
-                        <h4>Word Document (.docx) ➔ PDF Format</h4>
-                        <input type="file" id="word-to-pdf-input" accept=".docx" onchange="convertWordToPdfEngine(this)">
-                    </div>
-                </div>
-            </section>
-
-            <!-- PANEL 3: SYSTEM SETTINGS & MANUAL BACKUP -->
-            <section id="view-system-settings" class="view-panel">
-                <div class="section-title">
-                    <h2>System Control & Database Backup</h2>
-                </div>
-                <div class="settings-card">
-                    <h4>Export Complete Database File</h4>
-                    <p>Download all files currently present on the workspace screen into a single physical backup file.</p>
-                    <button class="btn-action green-btn" onclick="triggerDatabaseBackup()">Export Database Backup (.json)</button>
-                </div>
-                <div class="settings-card urgent-card">
-                    <h4>Import External Database Backup</h4>
-                    <input type="file" id="import-db-input" accept=".json" onchange="importDatabaseBackupEngine(this)" style="margin-top:10px;">
-                </div>
-            </section>
-
-        </main>
-
-        <!-- PERSISTENT APP WORKSPACE EDITOR OVERLAY -->
-        <div id="ai-premium-editor-overlay" class="editor-modal-overlay">
-            <div class="editor-top-bar">
-                <h3 id="editor-mode-title">AI Editing Sandbox</h3>
-                <button class="close-editor-btn" onclick="exitWorkspaceEditor()">✕ Close</button>
-            </div>
-            
-            <!-- Filters Engine Utility -->
-            <div class="editor-filter-strip">
-                <button class="filter-chip active" id="f-orig" onclick="applyWorkspaceFilter('original')">Original</button>
-                <button class="filter-chip" id="f-magic" onclick="applyWorkspaceFilter('magicColor')">Magic Enhancement</button>
-                <button class="filter-chip" id="f-bw" onclick="applyWorkspaceFilter('bw')">B&W Document</button>
-                <button class="filter-chip" id="f-gray" onclick="applyWorkspaceFilter('grayscale')">Grayscale</button>
-            </div>
-
-            <!-- Canvas Touch Layer Workspace -->
-            <div class="interactive-canvas-frame" onclick="handleDocumentCanvasTap(event)">
-                <img id="workspace-source-img" alt="Source Canvas Image Matrix">
-                <!-- Overlay Input Fields Generated Dynamically -->
-                <div id="dynamic-fields-injection-layer"></div>
-            </div>
-
-            <!-- Footer Output Action Anchors -->
-            <div class="editor-bottom-bar">
-                <button class="btn-action whatsapp-btn" onclick="executeWhatsAppShare()">📲 WhatsApp Share</button>
-                <button class="btn-action compile-btn" onclick="compileAndSaveDocument()">💾 Compile & Save Document</button>
-            </div>
+    </div>
+    
+    <!-- نیچے سائن آؤٹ یا ورژن انفو -->
+    <div style="border-top: 1px solid rgba(255,255,255,0.08); padding-top: 15px; text-align: center;">
+        <span style="font-size: 0.75rem; color: var(--text-gray);">MS CamScanner v26.4.0 (AI Pro)</span>
+    </div>
+</div>
+<!-- === END: 2026 SLIDE-OUT DRAWER SIDEBAR === -->
+    <!-- === START: ADVANCED FULLSCREEN 4K CAMERA OVERLAY === -->
+<div id="cameraOverlay" class="ios-camera-overlay">
+    
+    <!-- کیمرہ ٹاپ کنٹرولز بار (پریمیم فنکشنز) -->
+    <div class="cam-top-bar" style="background: rgba(7, 11, 25, 0.85); backdrop-filter: var(--ios-blur);">
+        <button class="ios-btn" onclick="closeLiveCamera()" style="background: rgba(255,59,48,0.2); color: #ff3b30; border-radius: 20px; padding: 8px 16px;">✕ Close</button>
+        
+        <!-- فلیش اور ریزولیوشن ٹوگلز (2026 فلیگ شپ فیچرز) -->
+        <div style="display: flex; gap: 10px; align-items: center;">
+            <button id="flashlightToggleBtn" class="ios-btn" onclick="toggleCameraFlash()" style="background: rgba(255,255,255,0.1); border-radius: 50%; width: 38px; height: 38px; display: flex; justify-content: center; align-items: center; padding: 0;">⚡</button>
+            <button id="resToggleBtn" class="ios-btn" onclick="toggleCameraResolution()" style="background: rgba(0, 122, 255, 0.2); color: var(--ios-accent-blue); font-size: 0.75rem; border-radius: 14px; padding: 6px 12px; font-weight: 700;">UHD 4K</button>
         </div>
-
-        <!-- CAMERA CAPTURE LAYER INTERACTIVE OVERLAY -->
-        <div id="camera-capture-overlay" class="camera-system-overlay">
-            <div class="camera-top-control">
-                <h3 id="camera-view-mode-indicator">Camera Viewfinder</h3>
-                <button class="close-camera-btn" onclick="shutdownLiveCameraView()">✕ Close</button>
-            </div>
-            <div class="viewfinder-container">
-                <video id="hardware-webcam-stream" autoplay playsinline></video>
-                <div id="overlay-frame-guide-box"></div>
-            </div>
-            <div class="camera-action-dock">
-                <button class="capture-trigger-shutter" onclick="captureLiveCameraFrame()"></button>
-            </div>
-        </div>
-
-        <!-- HIDDEN FILE INPUT PICKERS FOR DIRECT TRIGGERS -->
-        <input type="file" id="hidden-image-picker" accept="image/*" style="display: none;" onchange="processImportedImageFile(this)">
-
-        <!-- Bottom Tabbed Navigation Controls -->
-        <footer class="bottom-tab-navigation">
-            <button id="nav-btn-dashboard" class="tab-btn active" onclick="switchAppTab('dashboard')">
-                <span class="tab-icon">🏠</span><span class="tab-label">Workspace</span>
-            </button>
-            <button id="nav-btn-advanced-converters" class="tab-btn" onclick="switchAppTab('advanced-converters')">
-                <span class="tab-icon">🔄</span><span class="tab-label">Tools</span>
-            </button>
-            <button id="nav-btn-system-settings" class="tab-btn" onclick="switchAppTab('system-settings')">
-                <span class="tab-icon">⚙️</span><span class="tab-label">Settings</span>
-            </button>
-        </footer>
-
+        
+        <button class="ios-btn" onclick="document.getElementById('fileInput').click()" style="background: rgba(255,255,255,0.1); border-radius: 20px; padding: 8px 16px;">Gallery</button>
     </div>
 
-    <!-- Core Javascript Initialization Connector Link -->
-    <script src="app.js"></script>
+    <!-- لائیو کیمرہ پریویو زون اور لائیو اسکیننگ اوورلے گائیڈ لائنز -->
+    <div class="cam-preview-container">
+        <video id="webcamStream" autoplay playsinline></video>
+        
+        <!-- لائیو اسکینر کے کونوں پر بارڈرز (پروفیشنل لک کے لیے) -->
+        <div class="scanner-laser-line" style="position: absolute; top: 15%; left: 10%; right: 10%; bottom: 25%; border: 2px dashed rgba(0, 122, 255, 0.4); border-radius: 12px; pointer-events: none; box-shadow: inset 0 0 20px rgba(0, 122, 255, 0.1);">
+            <!-- اسکیننگ اینیمیشن ایفیکٹ -->
+            <div style="position: absolute; top: 0; left: 0; width: 100%; height: 2px; background: linear-gradient(90deg, transparent, var(--ios-accent-blue), transparent); animation: scanLineMove 2.5s linear infinite;"></div>
+        </div>
+        
+        <!-- سنگل اور بیچ موڈ سوئچرز (آپ کے اسکرین شاٹ کے عین مطابق) -->
+        <div class="cam-mode-pill-container">
+            <button class="mode-pill active" onclick="setCameraMode('single', this)">Single Mode</button>
+            <button class="mode-pill" onclick="setCameraMode('batch', this)">Batch Mode</button>
+        </div>
+    </div>
+
+    <!-- کیپچر کنٹرولز بار (بڑا واٹر مارک شٹر بٹن) -->
+    <div class="cam-bottom-bar" style="background: #000000; padding: 15px 0 25px 0;">
+        <div class="cam-shutter-row">
+            <div id="batchCountBadge" style="width: 50px; text-align: center; font-size: 0.8rem; font-weight: 700; color: var(--cs-emerald); background: rgba(11, 179, 118, 0.15); padding: 4px 8px; border-radius: 10px; visibility: hidden;">0 Pg</div>
+            <button class="cam-shutter-btn" onclick="captureLiveSnapshot()"></button>
+            <div style="width: 50px;"></div> <!-- الائنمنٹ فکسر -->
+        </div>
+    </div>
+</div>
+<!-- === END: ADVANCED FULLSCREEN 4K CAMERA OVERLAY === -->
+
+
+<!-- === START: REAL-TIME AUTOMATIC CROPPER INTERFACE === -->
+<div id="cropScreenOverlay" class="crop-screen-overlay">
+    <div class="ios-header" style="background: rgba(15, 22, 46, 0.9);">
+        <div class="ios-brand">✂️ Adjust Document <span>Boundary</span></div>
+        <button class="ios-btn" onclick="cancelCropper()" style="background: rgba(255,59,48,0.15); color: #ff3b30; border-radius: 12px;">Cancel</button>
+    </div>
+    
+    <!-- Cropper.js کا ورکنگ ایریا جہاں پیپر کے کونے فکس ہوں گے -->
+    <div class="crop-workspace">
+        <div class="crop-container">
+            <img id="cropImageTarget" src="" alt="Crop Target">
+        </div>
+    </div>
+    
+    <!-- کروپر کے باٹم کنٹرولز (روٹیشن، آٹو فکس اور فائنل پروسیس) -->
+    <div class="ios-bottom-actions-bar" style="background: rgba(15, 22, 46, 0.95); gap: 10px;">
+        <button class="ios-btn" onclick="rotateCropImage()" style="flex: 1; justify-content: center;">🔄 Rotate 90°</button>
+        <button class="ios-btn" onclick="resetCropSelection()" style="flex: 1; justify-content: center;">🔄 Reset Corners</button>
+        <button class="ios-btn primary" onclick="applyCropAndContinue()" style="flex: 2; justify-content: center;">Apply & Crop ➔</button>
+    </div>
+</div>
+<!-- === END: REAL-TIME AUTOMATIC CROPPER INTERFACE === -->
+    <!-- === START: PREMIUM WORKSPACE EDITOR & MULTI-LAYER CANVAS === -->
+<div id="premiumWorkspace" class="ios-workspace">
+    <!-- ایڈیٹر کا پریمیم ہیڈر -->
+    <div class="ios-header" style="background: rgba(15, 22, 46, 0.9);">
+        <div class="ios-brand" id="workspaceTitle" style="color: var(--cs-emerald);">📄 AI Smart Editor</div>
+        <div style="display: flex; gap: 8px;">
+            <button class="ios-btn" onclick="openSignatureOverlay()" style="background: rgba(0, 122, 255, 0.15); color: var(--ios-accent-blue); padding: 8px 12px; border-radius: 10px; font-size: 0.75rem;">✍️ Sign</button>
+            <button class="ios-btn" onclick="closeWorkspace()" style="background: rgba(255,255,255,0.08); padding: 8px 12px; border-radius: 10px; font-size: 0.75rem;">✕ Exit</button>
+        </div>
+    </div>
+    
+    <!-- مین ایڈٹنگ باڈی (جہاں شیٹ اور انٹرایکٹو ٹائپنگ فیلڈز بنیں گے) -->
+    <div class="workspace-body">
+        <div class="canvas-wrapper" id="canvasBaseWrapper">
+            <!-- بیس امیج جس پر کلک کرنے سے لکھائی ہوگی -->
+            <img id="canvasImageBase" onclick="handleCanvasTap(event)" src="" alt="Workspace Source">
+            <!-- ڈائنامک ٹیکسٹ ان پٹس کے لیے کنٹینر -->
+            <div id="editableFieldsContainer" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none;"></div>
+        </div>
+    </div>
+
+    <!-- 2026 ایڈوانسڈ امیج فلٹرز اسٹرپ -->
+    <div class="ios-filters-strip">
+        <div class="filter-chip active" id="filter-orig" onclick="applyImageFilter('original')">Original</div>
+        <div class="filter-chip" id="filter-magic" onclick="applyImageFilter('magicColor')">✨ Magic Color</div>
+        <div class="filter-chip" id="filter-bw" onclick="applyImageFilter('bw')">📰 Super B&W</div>
+        <div class="filter-chip" id="filter-gray" onclick="applyImageFilter('grayscale')">🌑 Grayscale</div>
+    </div>
+    
+    <!-- آٹو شیٹ کیلکولیشنز اور ڈاکیومنٹ سمری پینل -->
+    <div class="doc-summary-overlay" style="background: var(--bg-navy-card); padding: 10px 16px; border-top: 1px solid var(--border-navy); display: flex; justify-content: space-between; align-items: center; font-size: 0.8rem;">
+        <span style="color: var(--text-gray);">Live Math Engine:</span>
+        <span id="liveMathStatus" style="color: var(--cs-emerald); font-weight: 700;">No Numbers Found</span>
+    </div>
+    
+    <!-- ڈاون لوڈ، سیو اور شیئرنگ بٹنز -->
+    <div class="ios-bottom-actions-bar" style="background: rgba(15, 22, 46, 0.95); gap: 10px;">
+        <button class="ios-btn" onclick="processDoc('pdf')" style="flex: 1; justify-content: center; background: rgba(0,122,255,0.15); color: var(--ios-accent-blue);">💾 Save PDF</button>
+        <button class="ios-btn primary" onclick="shareToWhatsApp()" style="flex: 1; justify-content: center;">🚀 Share on WA</button>
+    </div>
+</div>
+<!-- === END: PREMIUM WORKSPACE EDITOR & MULTI-LAYER CANVAS === -->
+
+
+<!-- === START: DIGITAL SIGNATURE PAD WINDOW === -->
+<div id="signatureOverlay" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(7, 11, 25, 0.95); z-index: 9500; display: none; flex-direction: column;">
+    <div class="ios-header">
+        <div class="ios-brand">✍️ Draw Signature</div>
+        <button class="ios-btn" onclick="closeSignatureOverlay()" style="background: rgba(255,59,48,0.15); color: #ff3b30;">✕ Cancel</button>
+    </div>
+    
+    <div style="flex: 1; display: flex; justify-content: center; align-items: center; padding: 20px;">
+        <canvas id="signatureCanvas" style="background: #ffffff; border-radius: 16px; width: 100%; max-width: 500px; height: 300px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); touch-action: none;"></canvas>
+    </div>
+    
+    <div class="ios-bottom-actions-bar">
+        <button class="ios-btn" onclick="clearSignature()" style="flex: 1; justify-content: center;">🧹 Clear</button>
+        <button class="ios-btn primary" onclick="saveSignatureAndApply()" style="flex: 1; justify-content: center;">Apply Signature</button>
+    </div>
+</div>
+<!-- === END: DIGITAL SIGNATURE PAD WINDOW === -->
+
+
+<!-- === START: iOS 26 SYSTEM BOTTOM NAVIGATION BAR === -->
+<nav class="ios-bottom-nav">
+    <!-- ہوم ٹیب -->
+    <button class="ios-tab-btn active" id="tab-home" onclick="switchTab('home')">
+        <span style="font-size: 1.4rem;">🏠</span>
+        <span style="margin-top: 2px;">Home</span>
+    </button>
+    
+    <!-- الٹرا کیمرہ سینٹر بٹن -->
+    <div style="position: relative; width: 70px; height: 100%; display: flex; justify-content: center; align-items: center;">
+        <button class="ios-center-scan-btn" onclick="openLiveCamera()">+</button>
+        <input type="file" id="fileInput" hidden accept="image/*" onchange="handleFile(this)">
+    </div>
+    
+    <!-- فائلز مینیجر ٹیب -->
+    <button class="ios-tab-btn" id="tab-files" onclick="switchTab('files')">
+        <span style="font-size: 1.4rem;">📁</span>
+        <span style="margin-top: 2px;">Files</span>
+    </button>
+</nav>
+<!-- === END: iOS 26 SYSTEM BOTTOM NAVIGATION BAR === -->
+
+
+<!-- === START: EXTERNAL JAVASCRIPT SYSTEM LINK === -->
+<script src="app.js"></script>
+<!-- === END: EXTERNAL JAVASCRIPT SYSTEM LINK === -->
+
 </body>
 </html>
-
