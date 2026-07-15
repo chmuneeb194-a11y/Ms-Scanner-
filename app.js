@@ -252,112 +252,136 @@ function handleFile(inputElement) {
 /* ==========================================================
    === END: IMAGE FILE UPLOAD FROM GALLERY ===
    ========================================================== */
-// === START OF FUNCTION: handleCanvasTap ===
+// === START OF SMART POPUP FUNCTION ===
 function handleCanvasTap(event) {
     const imgBase = document.getElementById('canvasImageBase');
-    const container = document.getElementById('editableFieldsContainer');
-    
     if (!imgBase) return;
 
     const rect = imgBase.getBoundingClientRect();
     
-    // زوم کے حساب سے ماؤس کلک پوزیشن حاصل کرنا
+    // زوم اسکیل کے مطابق درست کلک لوکیشن نکالنا
     const clickX = (event.clientX - rect.left) / currentZoomScale;
     const clickY = (event.clientY - rect.top) / currentZoomScale;
     
     const pctX = (clickX / (rect.width / currentZoomScale)) * 100;
     const pctY = (clickY / (rect.height / currentZoomScale)) * 100;
 
-    // دو کالمز کی پوزیشن لاک (تصویر کی چوڑائی کے لحاظ سے)
-    const returnColumnX = 77.0; // Return Column %
-    const receivedColumnX = 91.5; // Received Column %
-    
-    // جو کالم کلک کے زیادہ قریب ہو، پوزیشن وہاں لاک کر دیں
+    // کالم لاکنگ: Return Amount (77.0%) یا Received Amount (91.5%)
+    const returnColumnX = 77.0;
+    const receivedColumnX = 91.5;
     const lockedX = (Math.abs(pctX - returnColumnX) < Math.abs(pctX - receivedColumnX)) ? returnColumnX : receivedColumnX;
+    const columnName = (lockedX === returnColumnX) ? "Return Amount" : "Received Amount";
 
-    // لائیو پیپر ہائٹ اسکیننگ ٹیکنالوجی
-    // یہ آپ کے پیپر پر لکھی ہوئی 24 لائنوں کو تصویر کے سائز کے مطابق لائیو مینیج کرتی ہے
+    // رو (Row) لاکنگ: کل 24 روز کا درست حساب
     const tableTopPct = 25.4; 
     const tableBottomPct = 57.4;
     const totalRows = 24;
     const rowHeight = (tableBottomPct - tableTopPct) / totalRows;
 
-    // لائیو چیک: کیا کلک لائیو شیٹ کے رینج کے اندر ہوا ہے؟
-    if (pctY >= tableTopPct - 1.0 && pctY <= tableBottomPct + 1.0) {
-        // قریبی ترین رو (Row) انڈیکس تلاش کرنا
+    // اگر کلک لسٹ والی جگہ کے اندر ہوا ہے
+    if (pctY >= tableTopPct - 0.8 && pctY <= tableBottomPct + 0.8) {
         const rowIndex = Math.round((pctY - tableTopPct) / rowHeight);
-        
-        // بالکل رو کے بیچ میں وائے کواڈینیٹ لاک کرنا
         const lockedY = tableTopPct + (rowIndex * rowHeight) - 0.35;
 
-        // چیک کریں کہ اس لائن پر پہلے سے کوئی ڈبہ موجود تو نہیں
-        const existingFields = container.querySelectorAll('.live-tap-input-field');
-        let isDuplicate = false;
-        existingFields.forEach(f => {
-            const topPct = parseFloat(f.style.top);
-            const leftPct = parseFloat(f.style.left);
-            if (Math.abs(topPct - lockedY) < 0.4 && Math.abs(leftPct - lockedX) < 0.4) {
-                isDuplicate = true;
-                f.focus(); // ڈپلیکیٹ بنانے کی بجائے پرانے پر فوکس کریں
+        // اسمارٹ پاپ اپ باکس کھولیں
+        openCustomPrompt(columnName, rowIndex, function(enteredValue) {
+            if (enteredValue.trim() !== "") {
+                // ڈیٹا لائیو محفوظ کریں
+                saveTypedFieldData(lockedX, lockedY, enteredValue);
+                saveAppState(); // لوکل میموری میں سیو
+                
+                // اسکرین پر پرنٹ کرنے کے لیے ڈرا فنکشن کال کریں
+                redrawFieldsOnScreen();
+                calculateSubtotals();
             }
         });
-
-        if (isDuplicate) return;
-
-        createNewInputField(lockedX, lockedY, rowIndex, container);
     }
 }
-// === END OF FUNCTION: handleCanvasTap ===
 
-// === START OF FUNCTION: createNewInputField ===
-function createNewInputField(lockedX, lockedY, rowIndex, container) {
-    const inputField = document.createElement('input');
-    inputField.type = 'text';
-    inputField.className = 'live-tap-input-field';
-    
-    inputField.style.left = `${lockedX}%`;
-    inputField.style.top = `${lockedY}%`;
-    
-    inputField.setAttribute('data-row-index', rowIndex);
-    inputField.setAttribute('data-col-x', lockedX);
-    
-    container.appendChild(inputField);
-    inputField.focus();
+// خوبصورت پاپ اپ بنانے اور ان پٹ لینے کا فنکشن
+function openCustomPrompt(columnName, rowIndex, callback) {
+    // اگر پہلے سے کوئی پاپ اپ کھلا ہے تو اسے ہٹائیں
+    const oldOverlay = document.querySelector('.custom-prompt-overlay');
+    if (oldOverlay) oldOverlay.remove();
 
-    inputField.addEventListener('blur', function() {
-        if (inputField.value.trim() !== "") {
-            inputField.style.border = "none";
-            inputField.style.background = "transparent";
-            
-            // پرانی پوزیشن کو صاف کر کے لائیو ڈیٹا گرڈ میں پش کریں
-            saveTypedFieldData(lockedX, lockedY, inputField.value);
-            saveAppState(); // لوکل اسٹوریج میں لائیو سیونگ
-            calculateSubtotals();
-        } else {
-            inputField.remove();
-        }
-    });
+    // نیا پاپ اپ بنانا
+    const overlay = document.createElement('div');
+    overlay.className = 'custom-prompt-overlay';
 
-    inputField.addEventListener('keypress', function(e) {
+    const box = document.createElement('div');
+    box.className = 'custom-prompt-box';
+
+    const title = document.createElement('div');
+    title.className = 'custom-prompt-title';
+    title.innerText = `رو نمبر ${rowIndex + 1} - کالم: ${columnName}`;
+
+    const input = document.createElement('input');
+    input.type = 'number'; // صرف نمبر کی بورڈ کھلے گا
+    input.className = 'custom-prompt-input';
+    input.placeholder = "رقم لکھیں...";
+    
+    // بٹنوں کا کنٹینر
+    const btnContainer = document.createElement('div');
+    btnContainer.className = 'custom-prompt-buttons';
+
+    const btnCancel = document.createElement('button');
+    btnCancel.className = 'custom-prompt-btn custom-prompt-btn-cancel';
+    btnCancel.innerText = 'کینسل';
+    btnCancel.onclick = function() { overlay.remove(); };
+
+    const btnOk = document.createElement('button');
+    btnOk.className = 'custom-prompt-btn custom-prompt-btn-ok';
+    btnOk.innerText = 'اوکے';
+    
+    // ڈیٹا جمع کروانے کا فنکشن
+    function submit() {
+        callback(input.value);
+        overlay.remove();
+    }
+
+    btnOk.onclick = submit;
+    
+    // کی بورڈ کے اینٹر (Enter) بٹن پر سبمٹ ہونا
+    input.onkeypress = function(e) {
         if (e.key === 'Enter') {
-            e.preventDefault();
-            inputField.blur(); // ڈیٹا سیو کر کے اگلی رو تلاش کرے گا
-
-            const nextRowIndex = rowIndex + 1;
-            const tableTopPct = 25.4; 
-            const tableBottomPct = 57.4;
-            const totalRows = 24;
-            const rowHeight = (tableBottomPct - tableTopPct) / totalRows;
-            const nextLockedY = tableTopPct + (nextRowIndex * rowHeight) - 0.35;
-
-            // اگر اگلی قطار شیٹ کی حد کے اندر ہے، تو خود بخود کی بورڈ نیچے والے ڈبے میں شفٹ ہو جائے گا
-            if (nextRowIndex < totalRows) {
-                createNewInputField(lockedX, nextLockedY, nextRowIndex, container);
-            }
+            submit();
         }
+    };
+
+    // سب کچھ جوڑنا
+    btnContainer.appendChild(btnCancel);
+    btnContainer.appendChild(btnOk);
+    box.appendChild(title);
+    box.appendChild(input);
+    box.appendChild(btnContainer);
+    overlay.appendChild(box);
+    document.body.appendChild(overlay);
+
+    // خود بخود ان پٹ باکس پر فوکس اور موبائل کی بورڈ اوپن کرنا
+    setTimeout(() => input.focus(), 50);
+}
+
+// تمام لکھے ہوئے ڈیٹا کو اسکرین پر صاف ستھرا دکھانے کا فنکشن
+function redrawFieldsOnScreen() {
+    const container = document.getElementById('editableFieldsContainer');
+    container.innerHTML = ''; // پرانا ڈیٹا صاف کریں
+
+    typedFieldsArray.forEach(field => {
+        const textSpan = document.createElement('span');
+        textSpan.className = 'live-tap-input-field';
+        textSpan.style.left = `${field.x}%`;
+        textSpan.style.top = `${field.y}%`;
+        textSpan.innerText = field.text;
+        
+        // چونکہ اب یہ صرف دکھانے کے لیے ہے، اس لیے بارڈرز غائب
+        textSpan.style.border = "none";
+        textSpan.style.background = "transparent";
+        
+        container.appendChild(textSpan);
     });
 }
-// === END OF FUNCTION: createNewInputField ===
+// === END OF SMART POPUP FUNCTION ===
+
 
 /* ==========================================================
    === START: SAVE TYPED FIELD INTERNAL DATA ===
@@ -643,14 +667,14 @@ async function shareToWhatsApp() {
 if (currentSubtotalSum > 0) {
     const formattedSum = currentSubtotalSum.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     
-    // شاداب فارمیسی شیٹ کی باٹم لائن کے مطابق آخری ٹوٹل خانے کی پوزیشن
-    const totalX = mergeCanvas.width * 0.915; // کالم کی رائٹ الائنمنٹ
-    const totalY = mergeCanvas.height * 0.582; // تصویر کے بالکل اینڈ کی ٹوٹل لائن پوزیشن
-    const fontScaleTotal = mergeCanvas.width * 0.015; // ٹیکسٹ سائز
+    // شاداب فارمیسی شیٹ کے مطابق فائنل باٹم لائن
+    const totalX = mergeCanvas.width * 0.915; // کالم کی الائنمنٹ
+    const totalY = mergeCanvas.height * 0.885; // بالکل نیچے ٹوٹل والے خانے کی اونچائی
+    const fontScaleTotal = mergeCanvas.width * 0.016; // ہندسوں کا سائز
 
     ctx.font = `700 ${fontScaleTotal}px Arial, sans-serif`;
     ctx.fillStyle = '#000000';
-    ctx.textAlign = 'right'; // دائیں طرف سے برابر الائنمنٹ
+    ctx.textAlign = 'right'; // دائیں طرف سے الائن
     ctx.fillText(formattedSum, totalX, totalY);
 }
 // === END OF BLOCK: PRINT TOTAL ON CANVAS ===
