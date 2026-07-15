@@ -176,61 +176,50 @@ function handleFile(inputElement) {
 /* ==========================================================
    === END: IMAGE FILE UPLOAD FROM GALLERY ===
    ========================================================== */
-/* ==========================================================
-   === START: MOUSE/TAP COORDINATE CAPTURE & INPUT SPAWNER ===
-   ========================================================== */
+// === START OF FUNCTION: handleCanvasTap ===
 function handleCanvasTap(event) {
     const imgBase = document.getElementById('canvasImageBase');
     const container = document.getElementById('editableFieldsContainer');
     
-    // Get exact click coordinates relative to the image
     const rect = imgBase.getBoundingClientRect();
     const clickX = event.clientX - rect.left;
     const clickY = event.clientY - rect.top;
     
-    // Convert pixels to percentage to keep it perfectly responsive on all mobile screens
-    const pctX = (clickX / rect.width) * 100;
-    const pctY = (clickY / rect.height) * 100;
+    const adjustedX = clickX - 25; 
+    const adjustedY = clickY - 7;
 
-    // Create a dynamic premium input box
+    const pctX = (adjustedX / rect.width) * 100;
+    const pctY = (adjustedY / rect.height) * 100;
+
     const inputField = document.createElement('input');
     inputField.type = 'text';
     inputField.className = 'live-tap-input-field';
     
-    // Set absolute percentage styles for exact overlaying on the invoice sheet
     inputField.style.left = `${pctX}%`;
     inputField.style.top = `${pctY}%`;
     
-    // Applying exact font match matching the 11px Arial/San-Serif delivery summary style
-    inputField.style.fontSize = '11px';
-    inputField.style.color = '#000000';
-    inputField.style.fontWeight = '600';
-    
-    // Auto focus when created
     container.appendChild(inputField);
     inputField.focus();
 
-    // When typing stops, we store the data and calculate live subtotals
     inputField.addEventListener('blur', function() {
         if (inputField.value.trim() !== "") {
+            inputField.style.border = "none";
+            inputField.style.background = "transparent";
+            
             saveTypedFieldData(pctX, pctY, inputField.value);
-            executeLiveMathCalculation(); // ٹائپنگ ختم ہوتے ہی خودکار کیلکولیٹر رن ہوگا
+            calculateSubtotals();
         } else {
-            inputField.remove(); // اگر خالی چھوڑا تو ڈبہ غائب ہو جائے گا
+            inputField.remove();
         }
     });
 
-    // Support for pressing Enter key on phone keypad
     inputField.addEventListener('keypress', function(e) {
         if (e.key === 'Enter') {
             inputField.blur();
         }
     });
 }
-/* ==========================================================
-   === END: MOUSE/TAP COORDINATE CAPTURE & INPUT SPAWNER ===
-   ========================================================== */
-
+// === END OF FUNCTION: handleCanvasTap ===
 
 /* ==========================================================
    === START: SAVE TYPED FIELD INTERNAL DATA ===
@@ -512,7 +501,20 @@ async function shareToWhatsApp() {
             ctx.textAlign = 'right';
             ctx.fillText(field.text, xPixel + (fontScale * 2), yPixel + fontScale);
         });
+// === START OF BLOCK: PRINT TOTAL ON CANVAS ===
+if (currentSubtotalSum > 0) {
+    const formattedSum = currentSubtotalSum.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    const totalX = mergeCanvas.width * 0.61; 
+    const totalY = mergeCanvas.height * 0.585; 
+    const fontScaleTotal = mergeCanvas.width * 0.014;
 
+    ctx.font = `700 ${fontScaleTotal}px Arial, sans-serif`;
+    ctx.fillStyle = '#000000';
+    ctx.textAlign = 'right';
+    ctx.fillText(formattedSum, totalX, totalY);
+}
+// === END OF BLOCK: PRINT TOTAL ON CANVAS ===
+       
         // Convert canvas drawing to BLOB (File Format)
         mergeCanvas.toBlob(async (blob) => {
             document.getElementById('globalLoader').style.display = 'none';
@@ -702,3 +704,36 @@ function saveSignatureAndApply() {
 /* ==========================================================
    === END: SAVE SIGNATURE & OVERLAY ON IMAGE ===
    ========================================================== */
+// global variable definition (place this where other globals are defined or right above)
+let currentSubtotalSum = 0;
+
+// === START OF FUNCTION: calculateSubtotals ===
+function calculateSubtotals() {
+    let tempSum = 0;
+    const allInputs = document.querySelectorAll('.live-tap-input-field');
+    
+    allInputs.forEach(input => {
+        const val = input.value.replace(/[^0-9.-]/g, ''); 
+        if (val !== "" && !isNaN(val)) {
+            tempSum += parseFloat(val);
+        }
+    });
+
+    currentSubtotalSum = tempSum;
+    updateLiveCalculatorUI();
+}
+// === END OF FUNCTION: calculateSubtotals ===
+
+// === START OF FUNCTION: updateLiveCalculatorUI ===
+function updateLiveCalculatorUI() {
+    const mathStatusEl = document.getElementById('liveMathStatus');
+    if (mathStatusEl) {
+        if (currentSubtotalSum > 0) {
+            const formattedSum = currentSubtotalSum.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            mathStatusEl.innerHTML = `Running Total: <strong style="color:#0bb376;">RS. ${formattedSum}</strong>`;
+        } else {
+            mathStatusEl.innerText = "No Entries Recorded";
+        }
+    }
+}
+// === END OF FUNCTION: updateLiveCalculatorUI ===
