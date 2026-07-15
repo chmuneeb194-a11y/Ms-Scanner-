@@ -259,39 +259,43 @@ function handleCanvasTap(event) {
     
     const rect = imgBase.getBoundingClientRect();
     
-    // زوم اسکیل کو ایڈجسٹ کر کے اصلی ٹیپ لوکیشن نکالنا
+    // زوم اسکیل کے مطابق درست ماؤس پوزیشن تلاش کرنا
     const clickX = (event.clientX - rect.left) / currentZoomScale;
     const clickY = (event.clientY - rect.top) / currentZoomScale;
     
     const pctX = (clickX / (rect.width / currentZoomScale)) * 100;
     const pctY = (clickY / (rect.height / currentZoomScale)) * 100;
 
-    // دو کالمز کی پوزیشن لاک (Return Amount = 77.2%, Received Amount = 91.8%)
-    const returnColumnX = 77.2;
-    const receivedColumnX = 91.8;
+    // دو پوزیشنز لاک: (Return Amount = 77.0%, Received Amount = 91.5%)
+    const returnColumnX = 77.0;
+    const receivedColumnX = 91.5;
     
-    // کالم ڈٹیکشن: اگر ٹیپ Return کالم کے قریب ہوا تو وہاں لاک کرو، ورنہ Received پر
+    // کالم ڈیٹیکٹر: کون سا کالم ٹیپ کے قریب ترین ہے؟
     const lockedX = (Math.abs(pctX - returnColumnX) < Math.abs(pctX - receivedColumnX)) ? returnColumnX : receivedColumnX;
 
-    // رو گریڈ لاک (24 روز)
-    const tableTop = 25.5;
-    const tableBottom = 57.5;
+    // رو لائیو پوزیشن ڈیٹیکٹر (کل 24 روز)
+    const tableTop = 25.4;
+    const tableBottom = 57.4;
     const totalRows = 24;
     const rowHeight = (tableBottom - tableTop) / totalRows;
 
-    if (pctY >= tableTop - 1 && pctY <= tableBottom + 1) {
+    // لائیو چیک: کیا ٹیپ شیٹ کے ٹیبل ایریا کے اندر ہوا ہے؟
+    if (pctY >= tableTop - 0.5 && pctY <= tableBottom + 0.5) {
+        // قریبی ترین رو (Row) کو خود بخود ڈیٹیکٹ اور لاک کرنا
         const rowIndex = Math.round((pctY - tableTop) / rowHeight);
-        const lockedY = tableTop + (rowIndex * rowHeight) - 0.4;
+        
+        // یہ فارمولا کواڈینیٹ کو بالکل لائن کے سینٹر میں فکس کر دے گا
+        const lockedY = tableTop + (rowIndex * rowHeight) - 0.35;
 
-        // پہلے سے موجود فیلڈ چیک کرنا
+        // پہلے سے موجود ان پٹ فیلڈ کو اوور لیپ ہونے سے بچانا
         const existingFields = container.querySelectorAll('.live-tap-input-field');
         let isDuplicate = false;
         existingFields.forEach(f => {
             const topPct = parseFloat(f.style.top);
             const leftPct = parseFloat(f.style.left);
-            if (Math.abs(topPct - lockedY) < 0.5 && Math.abs(leftPct - lockedX) < 0.5) {
+            if (Math.abs(topPct - lockedY) < 0.3 && Math.abs(leftPct - lockedX) < 0.3) {
                 isDuplicate = true;
-                f.focus();
+                f.focus(); // اگر موجود ہے تو اسے ہی سلیکٹ کرو، نیا نہ بناؤ
             }
         });
 
@@ -301,6 +305,57 @@ function handleCanvasTap(event) {
     }
 }
 // === END OF FUNCTION: handleCanvasTap ===
+
+// === START OF FUNCTION: createNewInputField ===
+function createNewInputField(lockedX, lockedY, rowIndex, container) {
+    const inputField = document.createElement('input');
+    inputField.type = 'text';
+    inputField.className = 'live-tap-input-field';
+    
+    inputField.style.left = `${lockedX}%`;
+    inputField.style.top = `${lockedY}%`;
+    
+    inputField.setAttribute('data-row-index', rowIndex);
+    inputField.setAttribute('data-col-x', lockedX);
+    
+    container.appendChild(inputField);
+    inputField.focus();
+
+    inputField.addEventListener('blur', function() {
+        if (inputField.value.trim() !== "") {
+            inputField.style.border = "none";
+            inputField.style.background = "transparent";
+            
+            // پرانا ڈیٹا صاف کر کے صرف ایک ہی یونیک پوزیشن پر ڈیٹا سیو ہوگا
+            saveTypedFieldData(lockedX, lockedY, inputField.value);
+            saveAppState();
+            calculateSubtotals();
+        } else {
+            inputField.remove();
+        }
+    });
+
+    inputField.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            inputField.blur(); // ڈیٹا لائیو سیو کرے گا
+
+            // اگلی رو پر آٹومیٹک جمپ
+            const nextRowIndex = rowIndex + 1;
+            const tableTop = 25.4;
+            const tableBottom = 57.4;
+            const totalRows = 24;
+            const rowHeight = (tableBottom - tableTop) / totalRows;
+            const nextLockedY = tableTop + (nextRowIndex * rowHeight) - 0.35;
+
+            if (nextRowIndex < totalRows) {
+                createNewInputField(lockedX, nextLockedY, nextRowIndex, container);
+            }
+        }
+    });
+}
+// === END OF FUNCTION: createNewInputField ===
+
 
 // === START OF FUNCTION: createNewInputField ===
 function createNewInputField(lockedX, lockedY, rowIndex, container) {
