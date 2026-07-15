@@ -325,26 +325,26 @@ body {
 /* === START OF STYLE: live-tap-input-field === */
 .live-tap-input-field {
     position: absolute;
-    background: #ffffff; /* سفید بیک گراؤنڈ تاکہ پیچھے کی لائنیں چھپ جائیں */
+    background: #ffffff; /* بیک گراؤنڈ سفید تاکہ پیچھے کی پرنٹنگ چھپ جائے */
     border: 1px solid rgba(0, 122, 255, 0.4); 
     color: #000000;
     font-family: Arial, sans-serif;
     font-weight: 700;
     outline: none;
-    padding: 0px 2px;
+    padding: 0px 4px;
     margin: 0;
     z-index: 3100;
-    text-align: right; /* نمبر دائیں طرف الائن */
-    width: 38px; /* کالم کے مطابق چوڑائی فکس */
-    height: 11px;
-    line-height: 11px;
+    text-align: right; /* ایکسل کی طرح رائٹ الائنمنٹ */
+    width: 48px; /* کالم کی ڈتھ کے مطابق فکسڈ سائز */
+    height: 12px;
+    line-height: 12px;
     box-sizing: border-box;
     pointer-events: auto;
 }
 
 .live-tap-input-field:focus {
     border: 1px solid var(--ios-accent-blue);
-    background: #ffffcc; /* فوکس ہونے پر ہلکا پیلا */
+    background: #ffffcc; /* سلیکٹ ہونے پر ہلکا پیلا ہائی لائٹ */
 }
 /* === END OF STYLE: live-tap-input-field === */
 
